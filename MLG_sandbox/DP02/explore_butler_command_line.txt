@@ -1,7 +1,7 @@
 PREOPS-1272: command-line version of create coadds
 want to start at the point where user has visit ids
 
-
+hi!
 
 #############################
 WED SEP 7 - explore butler from command-line
