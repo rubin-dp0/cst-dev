@@ -1,0 +1,50 @@
+PREOPS-1272: command-line version of create coadds
+want to start at the point where user has visit ids
+
+
+
+#############################
+WED SEP 7 - explore butler from command-line
+e.g., as in https://pipelines.lsst.io/getting-started/singleframe.html
+
+summary: can kind of query butler now
+
+# # # #
+attempt to view all, like we do in NBs
+TRY:
+> butler query-collections dp02
+RETURNS:
+nothing after a few minutes; killed
+
+# # # #
+TRY:
+> butler query-data-ids dp02 --collections '2.2i/runs/DP0.2' --datasets 'raw'
+> butler query-data-ids dp02 --collections '2.2i/runs/DP0.2' --datasets 'calexp'
+RETURNS:
+"No results. Try --help for more information."
+
+# # # #
+found this: https://lsstc.slack.com/archives/C01FBUGM2CV/p1660923920527559
+the following does work
+TRY:
+> butler query-dataset-types -v dp02 calexp
+RETURNS:
+ name                                    dimensions                                   storage class
+------ ------------------------------------------------------------------------------ -------------
+calexp ['band', 'instrument', 'detector', 'physical_filter', 'visit_system', 'visit']     ExposureF
+
+
+# # # #
+the above helped to make this also work
+TRY:
+> butler query-data-ids --where "instrument='LSSTCam-imSim' and skymap='DC2' and visit=919515" dp02 exposure
+> butler query-data-ids --where "instrument='LSSTCam-imSim' and skymap='DC2' and visit in (919515,924057,924085,924086,929477,930353)" dp02 exposure
+RETURNS:
+band   instrument  physical_filter exposure
+---- ------------- --------------- --------
+   i LSSTCam-imSim       i_sim_1.4   919515
+   i LSSTCam-imSim       i_sim_1.4   924057
+   i LSSTCam-imSim       i_sim_1.4   924085
+   i LSSTCam-imSim       i_sim_1.4   924086
+   i LSSTCam-imSim       i_sim_1.4   929477
+   i LSSTCam-imSim       i_sim_1.4   930353
