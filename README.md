@@ -1,2 +1,2 @@
-# cet-dev
-For the CET's development work and non-public materials.
+# cst-dev
+For the CST's development work and non-public materials.
