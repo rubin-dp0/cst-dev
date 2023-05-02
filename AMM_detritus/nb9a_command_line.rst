@@ -759,6 +759,7 @@ It may be desirable to save this shell script to a file and then launch the shel
 
 .. code-block::
 
+    . dp02_custom_coadd_1patch.sh
     Tue May  2 05:10:39 UTC 2023
     INFO 2023-05-02T05:25:38.501+00:00 lsst.ctrl.mpexec.cmdLineFwk ()(cmdLineFwk.py:581) - QuantumGraph contains 7 quanta for 2 tasks, graph ID: '1683005138.4967277-2775'
     INFO 2023-05-02T05:25:59.248+00:00 lsst.makeWarp.select (makeWarp:{instrument: 'LSSTCam-imSim', skymap: 'DC2', tract: 4431, patch: 17, visit: 919515, ...})(selectImages.py:228) - Selecting calexp {instrument: 'LSSTCam-imSim', detector: 110, visit: 919515, ...}
