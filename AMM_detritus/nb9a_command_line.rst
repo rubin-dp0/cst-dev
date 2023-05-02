@@ -62,3 +62,11 @@ Step 1. Access the terminal and setup
 
      eups list lsst_distrib
      g0b29ad24fb+9b30730ed8       current w_2022_40 setup
+
+Step 2. Build your custom coaddition pipeline
+=============================================
+
+As you saw in tutorial notebook 9b, you do not need to rerun the entire DP0.2 data processing in order to obtain custom coadds. You only need to run a subset of the Tasks that make up `step3` of the DP0.2 processing, where `step3` refers to coadd-level processing. Specifically, you want to rerun only the `makeWarp` and `assembleCoadd` tasks.
+
+The strategy for running these custom coadds via the command line is to start with the "Data Release Production" (DRP) pipeline used for DP0.2 processing and make relatively minor edits to isolate the specific `makeWarp` and `assembleCoadd` tasks of interest.
+
