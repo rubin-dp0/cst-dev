@@ -569,14 +569,33 @@ Tutorial notebook 9a shows that the desired custom coaddition entails executing 
     
 Note a few things about this command:
 
-* the command starts out with ``pipetask qgraph`` rather than ``pipetask run`` or ``pipetask build``
+* the command starts out with ``pipetask qgraph`` rather than ``pipetask run`` or ``pipetask build``.
 
-* the input data set collection (DP0.2) is specified via the argument ``-i 2.2i/runs/DP0.2``. It's necessary to know about the input collection in order for ``pipetask`` and Butler to figure out how many (and which) ``quanta`` are expected.
+* the input data set ``collection`` within DP0.2 is specified via the argument ``-i 2.2i/runs/DP0.2``. It's necessary to know about the input ``collection`` in order for ``pipetask`` and Butler to figure out how many (and which) ``quanta`` are expected.
 
 * The same custom pipeline as always is specified, ``-p config/makeWarpAssembleCoadd.yaml#step3 \``.
 
 * `-c` is used twice, to override the default configuration parameter settings for both ``doApplyFinalizedPsf=False`` and ``connections.visitSummary``.
 
-* The query string has speen specified via the `-d` argument of ``pipetask``.
+* The query string has speen specified via the `-d` argument of ``pipetask``. Including this query constraint is really important -- without it, Butler and ``pipetask`` might try to figure out the (huge) list of ``quanta`` for custom coaddition of the entire DP0.2 data set.
+
+Let's run this first ``pipetask qgraph`` command. Be aware that this takes approximately 15 minutes to run:
+
+.. code-block::
+
+    pipetask qgraph \
+    > -b dp02 \
+    > -i 2.2i/runs/DP0.2 \
+    > -p config/makeWarpAssembleCoadd.yaml#step3 \
+    > -c makeWarp:doApplyFinalizedPsf=False \
+    > -c makeWarp:connections.visitSummary="visitSummary" \
+    > -d "tract = 4431 AND patch = 17 AND visit in (919515,924057,924085,924086,929477,930353) AND skymap = 'DC2'"
+    lsst.ctrl.mpexec.cmdLineFwk INFO: QuantumGraph contains 7 quanta for 2 tasks, graph ID: '1682993535.1936796-972'
+    
+There is only one printed line of output, which tells us that there are 7 ``quanta`` for 2 ``Tasks``, both of which make sense and match with what was found in tutorial notebook 9a.
+
+3.2 What are the ``quanta``?
+
+It might be a little more satisfying to know the fully detailed list of 7 ``quanta``, rather than merely finding out that there are 7 ``quanta``.
 
 
