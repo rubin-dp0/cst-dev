@@ -542,6 +542,14 @@ Notice that the printed configuration parameter value is indeed ``False`` i.e., 
 
     -c makeWarp:connections.visitSummary="visitSummary" \
     
-    
+Step 3. Explore and Visualize the QuantumGraph
+==============================================
 
+Before actually deploying the custom coaddition, let's take some time to understand the ``QuantumGraph`` of the processing to be run. The ``QuantumGraph`` is a tool used by the LSST Science Pipelines to break a large processing into relatively "bite-sized" ``quanta`` and arrange these quanta into a sequence such that all inputs needed by a given ``quantum`` are available for the execution of that ``quantum``. In the present case, you will not be doing an especially large processing, but for production deployments it makes sense to inspect and validate the ``QuantumGraph`` before proceeding straight to full-scale processing launch. It is a valuable practice to validate your ``QuantumGraph`` before generating a bunch of outputs.
+
+So far, you've seen ``pipetask build`` and ``pipetask run``. For the ``QuantumGraph``, you'll use another ``pipetask`` variant, ``pipetask qgraph``. ``pipetask qgraph`` determines the full list of ``quanta`` that your processing will entail, so at this stage its important to bring in the query constraints that specify what subset of DP0.2 will be analyzed. This information is already available from notebook tutorial 9a. In detail, you want to make a coadd only for ``patch=4431``, ``tract=17`` of the ``DC2`` ``skyMap``, and only using a particular set of 6 input exposures drawn from a desired temporal interval (``visit`` = 919515, 924057, 924085, 924086, 929477, 930353). Tutorial notebook 9a also provides a translation of these constraints into Butler query syntax as:
+
+.. code-block::
+
+    tract = 4431 AND patch = 17 AND visit in (919515,924057,924085,924086,929477,930353) AND skymap = 'DC2'
 
