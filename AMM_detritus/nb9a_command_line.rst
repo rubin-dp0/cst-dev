@@ -984,3 +984,14 @@ It may be desirable to save this shell script to a file and then launch the shel
     INFO 2023-05-02T05:42:15.227+00:00 lsst.ctrl.mpexec.singleQuantumExecutor ()(singleQuantumExecutor.py:654) - Log records could not be stored in this butler because the datastore can not ingest files, empty record list is stored instead.
     INFO 2023-05-02T05:42:15.751+00:00 lsst.ctrl.mpexec.mpGraphExecutor ()(mpGraphExecutor.py:518) - Executed 7 quanta successfully, 0 failed and 0 remain out of total 7 quanta.
     Tue May  2 05:42:17 UTC 2023
+
+The last line (before the timestamp printout) says "Executed 7 quanta successfully, 0 failed and 0 remain out of total 7 quanta". So that means every subcomponent of this custom coadd processing was successful. That's good news!
+
+Optional exercises for the learner
+==========================================
+
+* Try running further downstream processing steps applied to your custom coadds, such as source detection run on the custom ``deepCoadd`` products.
+
+* Try modifying other configuration parameters for the ``makeWarp`` and/or ``assembleCoadd`` tasks via the ``pipetask`` ``-c`` argument syntax.
+
+* Try using the same two configuration parameter modifications as did this tutorial, but implementing them via a separate configuration (``.py``) file, rather than via the ``pipetask`` ``-c`` argument (hint: to do this, you'd use the ``-C`` argument for ``pipetask``).
