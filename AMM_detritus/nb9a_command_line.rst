@@ -70,7 +70,9 @@ As you saw in tutorial notebook 9b, you do not need to rerun the entire DP0.2 da
 
 The strategy for running these custom coadds via the command line is to start with the "Data Release Production" (DRP) pipeline used for DP0.2 processing and make relatively minor edits to isolate the specific ``makeWarp`` and ``assembleCoadd`` tasks of interest.
 
-Let's start by taking a look at the DRP pipeline YAML pipeline definition file for DP0.2. As mentioned in notebook tutorial 9a, this can be viewed from within the Rubin Science Platform (RSP) at ``$DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml``. There are multiple ways to view an ASCII (text) file such as ``DRP.yaml`` from a Linux terminal. Here we use a program called `cat <https://en.wikipedia.org/wiki/Cat_(Unix)>`_.
+2.1. Inspect the DP0.2 YAML pipeline definition
+
+Let's start by taking a look at the DRP pipeline YAML pipeline definition file for DP0.2. As mentioned in notebook tutorial 9a, this can be viewed from within the Rubin Science Platform (RSP) at ``$DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml``. There are multiple ways to view an `ASCII <https://en.wikipedia.org/wiki/ASCII>`_ (plain text) file such as ``DRP.yaml`` from a Linux terminal. Here we use a program called `cat <https://en.wikipedia.org/wiki/Cat_(Unix)>`_.
 
 
 .. code-block::
@@ -336,3 +338,5 @@ Let's start by taking a look at the DRP pipeline YAML pipeline definition file f
           which are available after consolidateSourceTable (step2).
           Tasks that require coadd products use Object Tables which are available
           after consolidateObjectTable (step3).
+          
+2.2. Edit the YAML pipeline definition for making custom coadds
