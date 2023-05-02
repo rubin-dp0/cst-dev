@@ -478,3 +478,24 @@ The ``-p`` parameter of ``pipetask`` is short for ``--pipeline`` and it is criti
     
           This subset is considered a workaround for missing middleware and task
           functionality.  It may be removed in the future.
+
+``pipetask --help`` provides a bunch of documentation about ``pipetask``.
+
+3.3 Customize and inspect the coaddition configurations
+
+As mentioned in tutorial notebook 9a, there are a couple of specific coaddition configuration parameters that need to be set in order to accomplish the desired custom coaddition. In detail, two ``makeWarp`` task needs two of its configuration parameters configured: ``doApplyFinalizedPsf`` and ``connections.visitSummary``. First, let's try an experiment of simply finding out what the default value of ``doApplyFinalizedPsf``, so that you can appreciate the results of having modified this parameteter later on. To view the configuration parameters, you need to use a ``pipetask run`` command, not a ``pipetask build`` command. The command used is shown here, and will be explained below:
+
+.. code-block::
+
+    pipetask run \
+    -b dp02 \
+    -p config/makeWarpAssembleCoadd.yaml#step3 \
+    --show config=makeWarp::doApplyFinalizedPsf
+    
+Notice that the ``-p`` parameter passed to ``pipetask`` has remained the same. But in order for ``pipetask run`` to operate, it also needs to know what Butler repository it's dealing with. That's why the `-b dp02` argument has been added. `dp02` is an alias that points to the S3 location of the DP0.2 Butler repository.
+
+The final line merits further explanation. ``--show config`` tells the LSST pipelines not to actually run the pipeline, but rather to only show the configuration parameters, so that you can understand all the detailed choices being made by your processing, if desired. The last line would be valid as simply ``--show config``. However, this would print out every single configuration parameter and its description -- more than 1300 lines of printouts in total! Appending ``=<Task>::<Parameter>`` to ``--show config`` specifies exactly which parameter you want to be shown. In this case, it's known from tutorial notebook 9a that we want to adjust the ``doApplyFinalizedPsf`` parameter of the ``makeWarp`` Task, hence why ``makeWarp::doApplyFinalizedPsf`` is appended to ``--show config``.
+
+
+
+
