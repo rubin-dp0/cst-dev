@@ -708,6 +708,20 @@ Like the previous ``pipetask qgraph``, this command also takes roughly 15 minute
           DatasetType('assembleCoadd_metadata', {band, skymap, tract, patch}, PropertySet): [DataId({band: 'i', skymap: 'DC2', tract: 4431, patch: 17})]
           DatasetType('deepCoadd_inputMap', {band, skymap, tract, patch}, HealSparseMap): [DataId({band: 'i', skymap: 'DC2', tract: 4431, patch: 17})]
 
+3.3 Visualizing the ``QuantumGraph``
+
+In addition to generating and printing out the ``QuantumGraph`` you can also visualize the ``QuantumGraph`` as a "flowchart" style diagram. Perhaps counterintuitively, visualization of the ``QuantumGraph`` is performed with ``pipetask build`` rather than ``pipetask qgraph``. This is because the ``QuyantumGraph`` visualization depends only on the structure of the pipeline definition, and not on details of exactly which patches/tracts/exposures will be processed. For this same reason, you don't need to specify all of the command line parameters (like the Butler query string) when generating the ``QuantumGraph`` visualization. The ``pipetask build`` command to generate the ``QuantumGraph`` visualization of your custom processing is:
+
+
+.. code-block::
+
+    pipetask build \
+    -p config/makeWarpAssembleCoadd.yaml#step3 \
+    --pipeline-dot pipeline.dot; \
+    dot pipeline.dot -Tpdf > makeWarpAssembleCoadd.pdf
+    
+This command executes very fast (roughly 5 seconds), again because it is not performing any search through the DP0.2 data set for e.g., input exposures. The ``pipeline.dot`` is essentially an intermediate temporary file which you may wish to delete. On a computer that supports opening graphical applications, you can visually inspect the resultant ``makeWarpAssembleCoadd.pdf`` ``QuantumGraph`` diagram, which is shown below.
+
 
 
 
