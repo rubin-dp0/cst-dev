@@ -367,3 +367,28 @@ Hopefully you're in whatever working directory on RSP you've chosen to be the pl
 .. code-block::
 
     mkdir config
+    
+Let's not modify the original ``$DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml`` file in place, but rather bring in a copy to the newly made `config` directory. We will then edit this copy to customize it for the desired coaddition.
+
+.. code-block::
+
+    cp $DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml config/makeWarpAssembleCoadd.yaml
+    
+Note that in doing this copy you've given the resulting file a name of `makeWarpAssembleCoadd.yaml`, which better reflects its purpose than would simply ``DRP.yaml``.
+
+Now let's edit your ``config/makeWarpAssembleCoadd.yaml`` pipeline definition file. There are multiple ways to edit a text file in a Linux environment, such as nano, emacs, and vim, all of which are available to you at the RSP terminal. As an example, here is the relevant nano command:
+
+.. code-block::
+
+    nano config/makeWarpAssembleCoadd.yaml
+
+Whatever editor you've chosen, edit the ``step3`` section shown above so that only the ``makeWarp`` and ``assembleCoadd`` tasks remain:
+
+.. code-block::
+
+      step3:
+        subset:
+          - makeWarp
+          - assembleCoadd
+
+Make sure to save your changes when you exit the text editor!
