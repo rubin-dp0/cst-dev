@@ -391,4 +391,23 @@ Whatever editor you've chosen, edit the ``step3`` section shown above so that on
           - makeWarp
           - assembleCoadd
 
-Make sure to save your changes when you exit the text editor!
+Make sure to save your changes when you exit the text editor! Also make sure that you did not change any of the indentation in the ``config/makeWarpAssembleCoadd.yaml`` file, for the lines that remain.
+
+To arrive at the above ``step3`` YAML, you should have deleted exactly 12 lines worth of YAML tasks from the material originally contained in ``DRP.yaml``. You can check exactly what you changed using the Linux command ``diff``, which prints out the difference between two files. The following shows the expected ``diff`` results for proper editing of the YAML pipeline definition:
+
+.. code-block::
+
+    diff $DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml config/makeWarpAssembleCoadd.yaml 
+    116,127d115
+    <       - detection
+    <       - mergeDetections
+    <       - deblend
+    <       - measure
+    <       - mergeMeasurements
+    <       - forcedPhotCoadd
+    <       - transformObjectTable
+    <       - writeObjectTable
+    <       - consolidateObjectTable
+    <       - healSparsePropertyMaps
+    <       - selectGoodSeeingVisits
+    <       - templateGen
