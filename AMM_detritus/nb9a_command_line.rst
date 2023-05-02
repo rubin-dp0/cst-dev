@@ -425,5 +425,56 @@ Some of the ``pipetask`` commands later in this tutorial require you to specify 
 
 3.2 Build your custom-defined pipeline
 
-``pipetask`` commands are provided as part of the LSST Science Pipelines software stack and are used to build, visualize, and run processing pipelines from the terminal. Let's not jump straight into running the pipeline, but rather start by checking whether the pipeline will even ``build``. To ``build`` a pipeline, you use a command starting with ``pipetask build`` and specify an argument telling ``pipetask`` which specific YAML pipeline definition file you want it to build. If there are syntax or other errors in the YAML file's pipeline definition, then ``pipetask build`` will fail with an error about the problem. If ``pipetask build`` succeeds, it will run without generating errors and print a YAML version of the pipeline to standard out.
+``pipetask`` commands are provided as part of the LSST Science Pipelines software stack and are used to build, visualize, and run processing pipelines from the terminal. Let's not jump straight into running the pipeline, but rather start by checking whether the pipeline will even ``build``. To ``build`` a pipeline, you use a command starting with ``pipetask build`` and specify an argument telling ``pipetask`` which specific YAML pipeline definition file you want it to build. If there are syntax or other errors in the YAML file's pipeline definition, then ``pipetask build`` will fail with an error about the problem. If ``pipetask build`` succeeds, it will run without generating errors and print a YAML version of the pipeline to standard out. Here is the exact syntax:
 
+.. code-block::
+
+    pipetask build \
+    -p config/makeWarpAssembleCoadd.yaml#step3 \
+    --show pipeline
+    
+This is all one single terminal (shell) command, but spread out over three input lines using ``\`` for line continuation. It would be entirely equivalent to run:
+
+.. code-block::
+
+    pipetask build -p config/makeWarpAssembleCoadd.yaml#step3 --show pipeline
+    
+Separating out each ``pipetask`` input can sometimes result in easier debugging, as it is easy to see exactly what input was specified for each ``pipetask`` parameter.
+
+The ``-p`` parameter of ``pipetask`` is short for ``--pipeline`` and it is critical that this parameter be specified as the new ``config/makeWarpAssembleCoadd.yaml`` file made in section 2.2. It is also critical that the ``-p`` argument contain the string ``#step3`` appended at the end of the config file name. This is because you want to only run the coaddition step to make custom coadds (other steps like ``step1`` have to do with reducing the single-frame images, which isn't relevant). Here's what running the command, and its output should look like:
+
+.. code-block::
+
+    pipetask build -p config/makeWarpAssembleCoadd.yaml#step3 --show pipeline
+    description: DRP specialized for ImSim-DC2 data
+    instrument: lsst.obs.lsst.LsstCamImSim
+    tasks:
+      makeWarp:
+        class: lsst.pipe.tasks.makeWarp.MakeWarpTask
+        config:
+        - makePsfMatched: true
+      assembleCoadd:
+        class: lsst.pipe.tasks.assembleCoadd.CompareWarpAssembleCoaddTask
+        config:
+        - doInputMap: true
+    subsets:
+      step3:
+        subset:
+        - makeWarp
+        - assembleCoadd
+        description: |
+          Tasks that can be run together, but only after the 'step1' and 'step2'
+          subsets.
+    
+          These should be run with explicit 'tract' constraints essentially all the
+          time, because otherwise quanta will be created for jobs with only partial
+          visit coverage.
+    
+          It is expected that many forcedPhotCcd quanta will "normally" fail when
+          running this subset, but this isn't a problem right now because there are
+          no tasks downstream of it.  If other tasks regularly fail or we add tasks
+          downstream of forcedPhotCcd, these subsets or the tasks will need
+          additional changes.
+    
+          This subset is considered a workaround for missing middleware and task
+          functionality.  It may be removed in the future.
