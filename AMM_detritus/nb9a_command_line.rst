@@ -15,7 +15,7 @@
 **Credit:** This command line tutorial is based on the corresponding notebook tutorial by Melissa Graham. The command line approach is heavily influenced by Shenming Fu's recipe for reducing `DECam <https://noirlab.edu/science/programs/ctio/instruments/Dark-Energy-Camera>`_ data with the Gen3 LSST Science Pipelines, which is in turn based on `Lee Kelvin's Merian processing instructions <https://hackmd.io/@lsk/merian>`_.
 
 **Introduction:** 
-This tutorial shows how to use command line ``butler`` invocations to produce custom coadds from simulated single-exposure Rubin/LSST images. It is meant to parallel the corresponding Jupyter Notebook tutorial entitled `Construct a Custom Coadded Image <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_.
+This tutorial shows how to use command line ``pipetask`` invocations to produce custom coadds from simulated single-exposure Rubin/LSST images. It is meant to parallel the corresponding Jupyter Notebook tutorial entitled `Construct a Custom Coadded Image <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_.
 
 This tutorial uses the Data Preview 0.2 (DP0.2) data set.
 This data set uses a subset of the DESC's Data Challenge 2 (DC2) simulated images, which have been reprocessed by Rubin Observatory using Version 23 of the LSST Science Pipelines.
@@ -376,7 +376,7 @@ Let's not modify the original ``$DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml
     
 Note that in doing this copy you've given the resulting file a name of `makeWarpAssembleCoadd.yaml`, which better reflects its purpose than would simply ``DRP.yaml``.
 
-Now let's edit your ``config/makeWarpAssembleCoadd.yaml`` pipeline definition file. There are multiple ways to edit a text file in a Linux environment, such as nano, emacs, and vim, all of which are available to you at the RSP terminal. As an example, here is the relevant nano command:
+Now let's edit your ``config/makeWarpAssembleCoadd.yaml`` pipeline definition file. There are multiple ways to edit a text file in a Linux environment, such as `nano <https://www.nano-editor.org/>`_, `emacs <https://www.gnu.org/software/emacs/>`_, and `vim <https://www.vim.org/>`_, all of which are available to you at the RSP terminal. As an example, here is the relevant nano command:
 
 .. code-block::
 
@@ -411,3 +411,19 @@ To arrive at the above ``step3`` YAML, you should have deleted exactly 12 lines 
     <       - healSparsePropertyMaps
     <       - selectGoodSeeingVisits
     <       - templateGen
+
+The lines starting with ``<`` symbols indicate lines that were deleted from ``$DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml``. Now you're ready to start running some ``pipetask`` commands at the terminal!
+
+Step 3. Show your pipeline and its configurations
+=================================================
+
+3.1 Choose an output collection name/location
+
+.. probably want to change where this appears relative to other items, figure out later
+
+Some of the ``pipetask`` commands later in this tutorial require you to specify an output collection where your new coadds will eventually be written to. As described in the notebook version of tutorial 9a, you want to name your output collection as something like ``u/<Your User Name>/<Collection Identifier>``. As an concrete example, throughout the rest of this tutorial ``u/ameisner/custom_coadd_window1_cl00`` is used as the collection name.
+
+3.2 Build your custom-defined pipeline
+
+``pipetask`` commands are provided as part of the LSST Science Pipelines software stack and are used to build, visualize, and run processing pipelines from the terminal. Let's not jump straight into running the pipeline, but rather start by checking whether the pipeline will even ``build``. To ``build`` a pipeline, you use a command starting with ``pipetask build`` and specify an argument telling ``pipetask`` which specific YAML pipeline definition file you want it to build. If there are syntax or other errors in the YAML file's pipeline definition, then ``pipetask build`` will fail with an error about the problem. If ``pipetask build`` succeeds, it will run without generating errors and print a YAML version of the pipeline to standard out.
+
