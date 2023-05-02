@@ -29,7 +29,7 @@ To find out which version of the LSST Science Pipelines you are using, look in t
 
 If you are using ``w_2022_40``, you may proceed with executing the custom coadd notebooks.
 
-If you are **not** using `w_2022_40` you **must** log out and start a new server:
+If you are **not** using ``w_2022_40`` you **must** log out and start a new server:
  1. At top left in the menu bar choose File then Save All and Exit.
  2. Re-enter the Notebook Aspect.
  3. At `the "Server Options" stage <https://dp0-2.lsst.io/data-access-analysis-tools/nb-intro.html#how-to-log-in-navigate-and-log-out-of-jupyterlab>`_, under "Select uncached image (slower start)" choose ``w_2022_40``.
@@ -340,3 +340,30 @@ Let's start by taking a look at the DRP pipeline YAML pipeline definition file f
           after consolidateObjectTable (step3).
           
 2.2. Edit the YAML pipeline definition for making custom coadds
+
+That's a lot of pipeline definition YAML! Luckily, it's only necessary for your purposes to be concerned with the ``step3`` (coadd-level processing) portion of the pipeline definition, which is shown below.
+
+.. code-block::
+
+      step3:
+        subset:
+          - makeWarp
+          - assembleCoadd
+          - detection
+          - mergeDetections
+          - deblend
+          - measure
+          - mergeMeasurements
+          - forcedPhotCoadd
+          - transformObjectTable
+          - writeObjectTable
+          - consolidateObjectTable
+          - healSparsePropertyMaps
+          - selectGoodSeeingVisits
+          - templateGen
+
+Hopefully you're in whatever working directory on RSP you've chosen to be the place from which you will run the custom coadd processing. It is somewhat of a convention to put pipeline configuration files in a subdirectory named `config`. So let's make that `config` subdirectory:
+
+.. code-block::
+
+    mkdir config
