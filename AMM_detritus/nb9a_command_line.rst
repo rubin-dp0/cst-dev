@@ -494,8 +494,36 @@ As mentioned in tutorial notebook 9a, there are a couple of specific coaddition 
     
 Notice that the ``-p`` parameter passed to ``pipetask`` has remained the same. But in order for ``pipetask run`` to operate, it also needs to know what Butler repository it's dealing with. That's why the `-b dp02` argument has been added. `dp02` is an alias that points to the S3 location of the DP0.2 Butler repository.
 
-The final line merits further explanation. ``--show config`` tells the LSST pipelines not to actually run the pipeline, but rather to only show the configuration parameters, so that you can understand all the detailed choices being made by your processing, if desired. The last line would be valid as simply ``--show config``. However, this would print out every single configuration parameter and its description -- more than 1300 lines of printouts in total! Appending ``=<Task>::<Parameter>`` to ``--show config`` specifies exactly which parameter you want to be shown. In this case, it's known from tutorial notebook 9a that we want to adjust the ``doApplyFinalizedPsf`` parameter of the ``makeWarp`` Task, hence why ``makeWarp::doApplyFinalizedPsf`` is appended to ``--show config``.
+The final line merits further explanation. ``--show config`` tells the LSST pipelines not to actually run the pipeline, but rather to only show the configuration parameters, so that you can understand all the detailed choices being made by your processing, if desired. The last line would be valid as simply ``--show config``. However, this would print out every single configuration parameter and its description -- more than 1300 lines of printouts in total! Appending ``=<Task>::<Parameter>`` to ``--show config`` specifies exactly which parameter you want to be shown. In this case, it's known from tutorial notebook 9a that you want to adjust the ``doApplyFinalizedPsf`` parameter of the ``makeWarp`` Task, hence why ``makeWarp::doApplyFinalizedPsf`` is appended to ``--show config``.
+
+Now let's look at what happens when you run the above ``pipetask command``:
+
+.. code-block::
+
+    pipetask run \
+    > -b dp02 \
+    > -p config/makeWarpAssembleCoadd.yaml#step3 \
+    > --show config=makeWarp::doApplyFinalizedPsf
+    Matching "doApplyFinalizedPsf" without regard to case (append :NOIGNORECASE to prevent this)
+    ### Configuration for task `makeWarp'
+    # Whether to apply finalized psf models and aperture correction map.
+    config.doApplyFinalizedPsf=True
+    No quantum graph generated or pipeline executed. The --show option was given and all options were processed.
+    
+Ignore the lines about "No quantum graph" and "NOIGNORECASE" -- for the present purposes, these can be considered non-fatal warnings. The line that starts with ``###`` specificies that ``pipetask run`` is showing us a parameter of the ``makeWarp`` Task (as opposed to some other task, like ``assembleCoadd``). The line that starts with ``#`` provides the plain English description of the parameter that you requested to be shown. The line following the plain English description of ``doApplyFinalizedPsf`` shows this parameter's default value, which is a boolean equal to ``True``. From tutorial notebook 9a, you know that it's necessary to change ``doApplyFinalizedPsf`` to ``False`` i.e., the opposite of its default value. Let's see how this plays out in practice. The following modified ``pipetask run`` command adds one extra input parameter for the custom ``doApplyFinalizedPsf`` setting:
+
+.. code-block::
+
+    pipetask run \
+    -b dp02 \
+    -p config/makeWarpAssembleCoadd.yaml#step3 \
+    -c makeWarp:doApplyFinalizedPsf=False \
+    --show config=makeWarp::doApplyFinalizedPsf
+    
+The penultimate line (``-c makeWarp:doApplyFinalizedPsf=False \``) is newly added. The ``-c`` parameter of ``pipetask run`` (note the lower case ``c``) can be used to specify a desired value of a given parameter, with argument syntax of ``<Task>:<Parameter>=<Value>``. In this case, the Task is ``makeWarp``, the parameter is ``doApplyFinalizedPsf``, and the desired value is ``False``. Now find out if you succeeded in changing the configuration, by looking at the printouts generated from running the above command:
 
 
+    
+    
 
 
