@@ -522,7 +522,25 @@ Ignore the lines about "No quantum graph" and "NOIGNORECASE" -- for the present 
     
 The penultimate line (``-c makeWarp:doApplyFinalizedPsf=False \``) is newly added. The ``-c`` parameter of ``pipetask run`` (note the lower case ``c``) can be used to specify a desired value of a given parameter, with argument syntax of ``<Task>:<Parameter>=<Value>``. In this case, the Task is ``makeWarp``, the parameter is ``doApplyFinalizedPsf``, and the desired value is ``False``. Now find out if you succeeded in changing the configuration, by looking at the printouts generated from running the above command:
 
+.. code-block::
 
+    pipetask run \
+    > -b dp02 \
+    > -p config/makeWarpAssembleCoadd.yaml#step3 \
+    > -c makeWarp:doApplyFinalizedPsf=False \
+    > --show config=makeWarp::doApplyFinalizedPsf
+    Matching "doApplyFinalizedPsf" without regard to case (append :NOIGNORECASE to prevent this)
+    ### Configuration for task `makeWarp'
+    # Whether to apply finalized psf models and aperture correction map.
+    config.doApplyFinalizedPsf=False
+
+    No quantum graph generated or pipeline executed. The --show option was given and all options were processed.
+    
+Notice that the printed configuration parameter value is indeed ``False`` i.e., not the default value...great! The second configuration parameter that we need to change can be passed to ``pipetask run`` in the exact same way, by simply adding a second ``-c`` argument whose line in the full shell command would look like
+
+.. code-block::
+
+    -c makeWarp:connections.visitSummary="visitSummary" \
     
     
 
