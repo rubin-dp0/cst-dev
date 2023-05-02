@@ -15,7 +15,7 @@
 **Credit:** This command line tutorial is based on the corresponding notebook tutorial by Melissa Graham. The command line approach is heavily influenced by Shenming Fu's recipe for reducing DECam data with the Gen3 LSST Science Pipelines, which is in turn based on Lee Kelvin's Merian processing instructions.
 
 **Introduction:** 
-This tutorial shows how to use command line `butler` invocations to produce custom coadds from simulated single-exposure Rubin/LSST images. It is meant to parallel the corresponding Jupyter Notebook tutorial entitled `Construct a Custom Coadded Image <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_.
+This tutorial shows how to use command line ``butler`` invocations to produce custom coadds from simulated single-exposure Rubin/LSST images. It is meant to parallel the corresponding Jupyter Notebook tutorial entitled `Construct a Custom Coadded Image <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_.
 
 This tutorial uses the Data Preview 0.2 (DP0.2) data set.
 This data set uses a subset of the DESC's Data Challenge 2 (DC2) simulated images, which have been reprocessed by Rubin Observatory using Version 23 of the LSST Science Pipelines.
@@ -27,12 +27,12 @@ This custom coadd tutorial will only run with LSST Science Pipelines version Wee
 
 To find out which version of the LSST Science Pipelines you are using, look in the footer bar.
 
-If you are using `w_2022_40`, you may proceed with executing the custom coadd notebooks.
+If you are using ``w_2022_40``, you may proceed with executing the custom coadd notebooks.
 
 If you are **not** using `w_2022_40` you **must** log out and start a new server:
  1. At top left in the menu bar choose File then Save All and Exit.
  2. Re-enter the Notebook Aspect.
- 3. At `the "Server Options" stage <https://dp0-2.lsst.io/data-access-analysis-tools/nb-intro.html#how-to-log-in-navigate-and-log-out-of-jupyterlab>`_, under "Select uncached image (slower start)" choose `w_2022_40`.
+ 3. At `the "Server Options" stage <https://dp0-2.lsst.io/data-access-analysis-tools/nb-intro.html#how-to-log-in-navigate-and-log-out-of-jupyterlab>`_, under "Select uncached image (slower start)" choose ``w_2022_40``.
  4. Note that it might take a few minutes to start your server with an old image.
 
 **Why do I need to use an old image for this tutorial?**
@@ -66,11 +66,11 @@ Step 1. Access the terminal and setup
 Step 2. Build your custom coaddition pipeline
 =============================================
 
-As you saw in tutorial notebook 9b, you do not need to rerun the entire DP0.2 data processing in order to obtain custom coadds. You only need to run a subset of the Tasks that make up `step3` of the DP0.2 processing, where `step3` refers to coadd-level processing. Specifically, you want to rerun only the `makeWarp` and `assembleCoadd` tasks.
+As you saw in tutorial notebook 9b, you do not need to rerun the entire DP0.2 data processing in order to obtain custom coadds. You only need to run a subset of the Tasks that make up ``step3`` of the DP0.2 processing, where ``step3`` refers to coadd-level processing. Specifically, you want to rerun only the `makeWarp` and `assembleCoadd` tasks.
 
-The strategy for running these custom coadds via the command line is to start with the "Data Release Production" (DRP) pipeline used for DP0.2 processing and make relatively minor edits to isolate the specific `makeWarp` and `assembleCoadd` tasks of interest.
+The strategy for running these custom coadds via the command line is to start with the "Data Release Production" (DRP) pipeline used for DP0.2 processing and make relatively minor edits to isolate the specific ``makeWarp`` and ``assembleCoadd`` tasks of interest.
 
-Let's start by taking a look at the DRP pipeline YAML pipeline definition file for DP0.2. As mentioned in notebook tutorial 9a, this can be viewed from within the Rubin Science Platform (RSP) at ``$DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml``.
+Let's start by taking a look at the DRP pipeline YAML pipeline definition file for DP0.2. As mentioned in notebook tutorial 9a, this can be viewed from within the Rubin Science Platform (RSP) at ``$DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml``. There are multiple ways to view an ASCII (text) file such as ``DRP.yaml`` from a Linux terminal. Here we use a program called `cat <https://en.wikipedia.org/wiki/Cat_(Unix)>`_.
 
 
 .. code-block::
