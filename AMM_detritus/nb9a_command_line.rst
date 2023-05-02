@@ -42,3 +42,23 @@ However, the latest versions of the pipelines are not compatible with the interm
 To update this tutorial to be able to use Weekly 2023_07, it would have to demonstrate how to recreate coadds *starting with the raw data products*.
 This is pedagogically undesirable because it does not accurately represent *future workflows*, which is the goal of DP0.2.
 Thus, it is recommended that delegates learn how to recreate coadds with Weekly 2022_40.
+
+Step 1. Access the terminal and setup
+=====================================
+
+1.1. Log in to the Notebook Aspect. The terminal is a subcomponent of the Notebook Aspect.
+
+1.2. In the launcher window under "Other", select the terminal.
+
+1.3. Set up the Rubin Observatory environment.
+
+.. code-block::
+
+    setup lsst_distrib
+    
+1.4. Perform a command line verification that you are using the correct `w_2022_40` version of the LSST Science Pipelines.
+
+.. code-block::
+
+     eups list lsst_distrib
+     g0b29ad24fb+9b30730ed8       current w_2022_40 setup
