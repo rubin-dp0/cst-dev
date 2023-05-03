@@ -58,7 +58,7 @@ Step 1. Access the terminal and setup
 
     setup lsst_distrib
     
-1.4. Perform a command line verification that you are using the correct `w_2022_40` version of the LSST Science Pipelines.
+1.4. Perform a command line verification that you are using the correct ``w_2022_40`` version of the LSST Science Pipelines.
 
 .. code-block::
 
@@ -68,7 +68,7 @@ Step 1. Access the terminal and setup
 Step 2. Build your custom coaddition pipeline
 =============================================
 
-As you saw in tutorial notebook 9b, you do not need to rerun the entire DP0.2 data processing in order to obtain custom coadds. You only need to run a subset of the Tasks that make up ``step3`` of the DP0.2 processing, where ``step3`` refers to coadd-level processing. Specifically, you want to rerun only the `makeWarp` and `assembleCoadd` tasks.
+As you saw in tutorial notebook 9b, you do not need to rerun the entire DP0.2 data processing in order to obtain custom coadds. You only need to run a subset of the Tasks that make up ``step3`` of the DP0.2 processing, where ``step3`` refers to coadd-level processing. Specifically, you want to rerun only the ``makeWarp`` and ``assembleCoadd`` tasks.
 
 The strategy for running these custom coadds via the command line is to start with the "Data Release Production" (DRP) pipeline used for DP0.2 processing and make relatively minor edits to isolate the specific ``makeWarp`` and ``assembleCoadd`` tasks of interest.
 
@@ -376,7 +376,7 @@ Let's not modify the original ``$DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml
 
     cp $DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml config/makeWarpAssembleCoadd.yaml
     
-Note that in doing this copy you've given the resulting file a name of `makeWarpAssembleCoadd.yaml`, which better reflects its purpose than would simply ``DRP.yaml``.
+Note that in doing this copy you've given the resulting file a name of ``makeWarpAssembleCoadd.yaml``, which better reflects its purpose than would simply ``DRP.yaml``.
 
 Now let's edit your ``config/makeWarpAssembleCoadd.yaml`` pipeline definition file. There are multiple ways to edit a text file in a Linux environment, such as `nano <https://www.nano-editor.org/>`_, `emacs <https://www.gnu.org/software/emacs/>`_, and `vim <https://www.vim.org/>`_, all of which are available to you at the RSP terminal. As an example, here is the relevant nano command:
 
@@ -577,7 +577,7 @@ Note a few things about this command:
 
 * The same custom pipeline as always is specified, ``-p config/makeWarpAssembleCoadd.yaml#step3 \``.
 
-* `-c` is used twice, to override the default configuration parameter settings for both ``doApplyFinalizedPsf=False`` and ``connections.visitSummary``.
+* ``-c`` is used twice, to override the default configuration parameter settings for both ``doApplyFinalizedPsf=False`` and ``connections.visitSummary``.
 
 * The query string has speen specified via the `-d` argument of ``pipetask``. Including this query constraint is really important -- without it, Butler and ``pipetask`` might try to figure out the (huge) list of ``quanta`` for custom coaddition of the entire DP0.2 data set.
 
