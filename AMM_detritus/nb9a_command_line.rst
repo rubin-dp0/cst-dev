@@ -253,7 +253,7 @@ That's a lot of pipeline definition YAML! Luckily, it's only necessary for your 
           - selectGoodSeeingVisits
           - templateGen
 
-Hopefully you're in whatever working directory on RSP you've chosen to be the place from which you will run the custom coadd processing. It is somewhat of a convention to put pipeline configuration files in a subdirectory named `config`. So let's make that `config` subdirectory:
+Ensure that you're in the working directory on RSP that you've chosen to be the place from which you will run the custom coadd processing. It is somewhat of a convention to put pipeline configuration files in a subdirectory named `config`. So let's make that `config` subdirectory:
 
 .. code-block::
 
