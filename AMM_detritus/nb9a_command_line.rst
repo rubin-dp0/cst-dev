@@ -312,7 +312,7 @@ Some of the ``pipetask`` commands later in this tutorial require you to specify 
 
 3.2 Build your custom-defined pipeline
 
-``pipetask`` commands are provided as part of the LSST Science Pipelines software stack and are used to build, visualize, and run processing pipelines from the terminal. Let's not jump straight into running the pipeline, but rather start by checking whether the pipeline will even ``build``. To ``build`` a pipeline, you use a command starting with ``pipetask build`` and specify an argument telling ``pipetask`` which specific YAML pipeline definition file you want it to build. If there are syntax or other errors in the YAML file's pipeline definition, then ``pipetask build`` will fail with an error about the problem. If ``pipetask build`` succeeds, it will run without generating errors and print a YAML version of the pipeline to standard out. Here is the exact syntax:
+`pipetask <https://pipelines.lsst.io/modules/lsst.ctrl.mpexec/pipetask.html>`_ commands are provided as part of the LSST Science Pipelines software stack and are used to build, visualize, and run processing pipelines from the terminal. Let's not jump straight into running the pipeline, but rather start by checking whether the pipeline will even ``build``. To ``build`` a pipeline, you use a command starting with ``pipetask build`` and specify an argument telling ``pipetask`` which specific YAML pipeline definition file you want it to build. If there are syntax or other errors in the YAML file's pipeline definition, then ``pipetask build`` will fail with an error about the problem. If ``pipetask build`` succeeds, it will run without generating errors and print a YAML version of the pipeline to standard out. Here is the exact syntax:
 
 .. code-block::
 
