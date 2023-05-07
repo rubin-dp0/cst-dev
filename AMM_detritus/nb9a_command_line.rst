@@ -78,7 +78,7 @@ The strategy for running these custom coadds via the command line is to start wi
 
 2.1. Inspect the DP0.2 YAML pipeline definition
 
-Let's start by taking a look at the DRP pipeline YAML pipeline definition file for DP0.2. As mentioned in notebook `tutorial 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_, this can be viewed from within the Rubin Science Platform (RSP) at ``$DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml``. There are multiple ways to view an `ASCII <https://en.wikipedia.org/wiki/ASCII>`_ (plain text) file such as ``DRP.yaml`` from a Linux terminal. Here we use a program called `head <https://en.wikipedia.org/wiki/Head_(Unix)>`_.
+Let's start by taking a look at the DRP pipeline YAML pipeline definition file for DP0.2. As mentioned in notebook `tutorial 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_, this can be viewed from within the Rubin Science Platform (RSP) at ``$DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml``. There are multiple ways to view an `ASCII <https://en.wikipedia.org/wiki/ASCII>`_ (plain text) file such as ``DRP.yaml`` from a Linux terminal. Let's use a program called `head <https://en.wikipedia.org/wiki/Head_(Unix)>`_.
 
 
 .. code-block::
@@ -259,7 +259,7 @@ Hopefully you're in whatever working directory on RSP you've chosen to be the pl
 
     mkdir config
     
-Let's not modify the original ``$DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml`` file in place, but rather bring in a copy to the newly made `config` directory. We will then edit this copy to customize it for the desired coaddition.
+Let's not modify the original ``$DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml`` file in place, but rather bring in a copy to the newly made `config` directory. You will then edit this copy to customize it for the desired coaddition.
 
 .. code-block::
 
@@ -427,7 +427,7 @@ The penultimate line (``-c makeWarp:doApplyFinalizedPsf=False \``) is newly adde
 
     No quantum graph generated or pipeline executed. The --show option was given and all options were processed.
     
-Notice that the printed configuration parameter value is indeed ``False`` i.e., not the default value...great! The second configuration parameter that we need to change can be passed to ``pipetask run`` in the exact same way, by simply adding a second ``-c`` argument whose line in the full shell command would look like
+Notice that the printed configuration parameter value is indeed ``False`` i.e., not the default value...great! The second configuration parameter that you need to change can be passed to ``pipetask run`` in the exact same way, by simply adding a second ``-c`` argument whose line in the full shell command would look like
 
 .. code-block::
 
