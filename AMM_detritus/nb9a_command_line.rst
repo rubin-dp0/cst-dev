@@ -308,7 +308,7 @@ Step 3. Show your pipeline and its configurations
 
 .. probably want to change where this appears relative to other items, figure out later
 
-Some of the ``pipetask`` commands later in this tutorial require you to specify an output collection where your new coadds will eventually be written to. As described in the notebook version of tutorial 9a, you want to name your output collection as something like ``u/<Your User Name>/<Collection Identifier>``. As an concrete example, throughout the rest of this tutorial ``u/ameisner/custom_coadd_window1_cl00`` is used as the collection name.
+Some of the ``pipetask`` commands later in this tutorial require you to specify an output collection where your new coadds will eventually be written to. As described in the notebook version of `tutorial 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_, you want to name your output collection as something like ``u/<Your User Name>/<Collection Identifier>``. As an concrete example, throughout the rest of this tutorial ``u/ameisner/custom_coadd_window1_cl00`` is used as the collection name.
 
 3.2 Build your custom-defined pipeline
 
@@ -370,7 +370,7 @@ The ``-p`` parameter of ``pipetask`` is short for ``--pipeline`` and it is criti
 
 3.3 Customize and inspect the coaddition configurations
 
-As mentioned in tutorial notebook 9a, there are a couple of specific coaddition configuration parameters that need to be set in order to accomplish the desired custom coaddition. In detail, two ``makeWarp`` task needs two of its configuration parameters configured: ``doApplyFinalizedPsf`` and ``connections.visitSummary``. First, let's try an experiment of simply finding out what the default value of ``doApplyFinalizedPsf``, so that you can appreciate the results of having modified this parameteter later on. To view the configuration parameters, you need to use a ``pipetask run`` command, not a ``pipetask build`` command. The command used is shown here, and will be explained below:
+As mentioned in `tutorial notebook 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_, there are a couple of specific coaddition configuration parameters that need to be set in order to accomplish the desired custom coaddition. In detail, two ``makeWarp`` task needs two of its configuration parameters configured: ``doApplyFinalizedPsf`` and ``connections.visitSummary``. First, let's try an experiment of simply finding out what the default value of ``doApplyFinalizedPsf``, so that you can appreciate the results of having modified this parameteter later on. To view the configuration parameters, you need to use a ``pipetask run`` command, not a ``pipetask build`` command. The command used is shown here, and will be explained below:
 
 .. code-block::
 
@@ -381,7 +381,7 @@ As mentioned in tutorial notebook 9a, there are a couple of specific coaddition 
     
 Notice that the ``-p`` parameter passed to ``pipetask`` has remained the same. But in order for ``pipetask run`` to operate, it also needs to know what Butler repository it's dealing with. That's why the `-b dp02` argument has been added. `dp02` is an alias that points to the S3 location of the DP0.2 Butler repository.
 
-The final line merits further explanation. ``--show config`` tells the LSST pipelines not to actually run the pipeline, but rather to only show the configuration parameters, so that you can understand all the detailed choices being made by your processing, if desired. The last line would be valid as simply ``--show config``. However, this would print out every single configuration parameter and its description -- more than 1300 lines of printouts in total! Appending ``=<Task>::<Parameter>`` to ``--show config`` specifies exactly which parameter you want to be shown. In this case, it's known from tutorial notebook 9a that you want to adjust the ``doApplyFinalizedPsf`` parameter of the ``makeWarp`` Task, hence why ``makeWarp::doApplyFinalizedPsf`` is appended to ``--show config``.
+The final line merits further explanation. ``--show config`` tells the LSST pipelines not to actually run the pipeline, but rather to only show the configuration parameters, so that you can understand all the detailed choices being made by your processing, if desired. The last line would be valid as simply ``--show config``. However, this would print out every single configuration parameter and its description -- more than 1300 lines of printouts in total! Appending ``=<Task>::<Parameter>`` to ``--show config`` specifies exactly which parameter you want to be shown. In this case, it's known from `tutorial notebook 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_ that you want to adjust the ``doApplyFinalizedPsf`` parameter of the ``makeWarp`` Task, hence why ``makeWarp::doApplyFinalizedPsf`` is appended to ``--show config``.
 
 Now let's look at what happens when you run the above ``pipetask command``:
 
@@ -397,7 +397,7 @@ Now let's look at what happens when you run the above ``pipetask command``:
     config.doApplyFinalizedPsf=True
     No quantum graph generated or pipeline executed. The --show option was given and all options were processed.
     
-Ignore the lines about "No quantum graph" and "NOIGNORECASE" -- for the present purposes, these can be considered non-fatal warnings. The line that starts with ``###`` specificies that ``pipetask run`` is showing us a parameter of the ``makeWarp`` Task (as opposed to some other task, like ``assembleCoadd``). The line that starts with ``#`` provides the plain English description of the parameter that you requested to be shown. The line following the plain English description of ``doApplyFinalizedPsf`` shows this parameter's default value, which is a boolean equal to ``True``. From tutorial notebook 9a, you know that it's necessary to change ``doApplyFinalizedPsf`` to ``False`` i.e., the opposite of its default value. Let's see how this plays out in practice. The following modified ``pipetask run`` command adds one extra input parameter for the custom ``doApplyFinalizedPsf`` setting:
+Ignore the lines about "No quantum graph" and "NOIGNORECASE" -- for the present purposes, these can be considered non-fatal warnings. The line that starts with ``###`` specificies that ``pipetask run`` is showing us a parameter of the ``makeWarp`` Task (as opposed to some other task, like ``assembleCoadd``). The line that starts with ``#`` provides the plain English description of the parameter that you requested to be shown. The line following the plain English description of ``doApplyFinalizedPsf`` shows this parameter's default value, which is a boolean equal to ``True``. From `tutorial notebook 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_, you know that it's necessary to change ``doApplyFinalizedPsf`` to ``False`` i.e., the opposite of its default value. Let's see how this plays out in practice. The following modified ``pipetask run`` command adds one extra input parameter for the custom ``doApplyFinalizedPsf`` setting:
 
 .. code-block::
 
@@ -434,7 +434,7 @@ Step 3. Explore and Visualize the QuantumGraph
 
 Before actually deploying the custom coaddition, let's take some time to understand the ``QuantumGraph`` of the processing to be run. The ``QuantumGraph`` is a tool used by the LSST Science Pipelines to break a large processing into relatively "bite-sized" ``quanta`` and arrange these quanta into a sequence such that all inputs needed by a given ``quantum`` are available for the execution of that ``quantum``. In the present case, you will not be doing an especially large processing, but for production deployments it makes sense to inspect and validate the ``QuantumGraph`` before proceeding straight to full-scale processing launch. It is a valuable practice to validate your ``QuantumGraph`` before generating a bunch of outputs.
 
-So far, you've seen ``pipetask build`` and ``pipetask run``. For the ``QuantumGraph``, you'll use another ``pipetask`` variant, ``pipetask qgraph``. ``pipetask qgraph`` determines the full list of ``quanta`` that your processing will entail, so at this stage its important to bring in the query constraints that specify what subset of DP0.2 will be analyzed. This information is already available from notebook tutorial 9a. In detail, you want to make a coadd only for ``patch=4431``, ``tract=17`` of the ``DC2`` ``skyMap``, and only using a particular set of 6 input exposures drawn from a desired temporal interval (``visit`` = 919515, 924057, 924085, 924086, 929477, 930353). Tutorial notebook 9a also provides a translation of these constraints into Butler query syntax as:
+So far, you've seen ``pipetask build`` and ``pipetask run``. For the ``QuantumGraph``, you'll use another ``pipetask`` variant, ``pipetask qgraph``. ``pipetask qgraph`` determines the full list of ``quanta`` that your processing will entail, so at this stage its important to bring in the query constraints that specify what subset of DP0.2 will be analyzed. This information is already available from `notebook tutorial 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_. In detail, you want to make a coadd only for ``patch=4431``, ``tract=17`` of the ``DC2`` ``skyMap``, and only using a particular set of 6 input exposures drawn from a desired temporal interval (``visit`` = 919515, 924057, 924085, 924086, 929477, 930353). `Tutorial notebook 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_ also provides a translation of these constraints into Butler query syntax as:
 
 .. code-block::
 
@@ -442,7 +442,7 @@ So far, you've seen ``pipetask build`` and ``pipetask run``. For the ``QuantumGr
     
 3.1 How many ``quanta``?
 
-Tutorial notebook 9a shows that the desired custom coaddition entails executing 7 ``quanta`` (6 for ``makeWarp`` -- one per input exposure -- plus one for ``assembleCoadd``). Hopefully the command line version of this processing has the same number (and list) of ``quanta``! Let's check. Here's the ``pipetask qgraph`` command to use:
+`Tutorial notebook 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_ shows that the desired custom coaddition entails executing 7 ``quanta`` (6 for ``makeWarp`` -- one per input exposure -- plus one for ``assembleCoadd``). Hopefully the command line version of this processing has the same number (and list) of ``quanta``! Let's check. Here's the ``pipetask qgraph`` command to use:
 
 .. code-block::
 
@@ -479,7 +479,7 @@ Let's run this first ``pipetask qgraph`` command. Be aware that this takes appro
     > -d "tract = 4431 AND patch = 17 AND visit in (919515,924057,924085,924086,929477,930353) AND skymap = 'DC2'"
     lsst.ctrl.mpexec.cmdLineFwk INFO: QuantumGraph contains 7 quanta for 2 tasks, graph ID: '1682993535.1936796-972'
     
-There is only one printed line of output, which tells us that there are 7 ``quanta`` for 2 ``Tasks``, both of which make sense and match with what was found in tutorial notebook 9a.
+There is only one printed line of output, which tells us that there are 7 ``quanta`` for 2 ``Tasks``, both of which make sense and match with what was found in `tutorial notebook 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_.
 
 3.2 What are the ``quanta``?
 
