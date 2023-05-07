@@ -587,12 +587,12 @@ This command executes very fast (roughly 5 seconds), again because it is not per
   :width: 1500
   :alt: QuantumGraph diagram for custom coaddition
 
-Light gray rectangles with rounded corners represent data, whereas darker gray rectangles with sharp corners represent pipeline ``Tasks``. The arrows interconnecting the data and ``Tasks`` illustrate the data processing flow. The data processing starts at the top, with the ``calexp`` calibrated single-exposure images. The ``makeWarp`` ``Task`` is applied to generate reprojected "warp" images from the various input ``calexp`` images, and finally the ``assembleCoadd`` ``Task`` combines the warps into ``deepCoadd`` coadded products (light gray boxes along the bottom). 
+Light gray rectangles with rounded corners represent data, whereas darker gray rectangles with sharp corners represent pipeline ``Tasks``. The arrows connecting the data and ``Tasks`` illustrate the data processing flow. The data processing starts at the top, with the ``calexp`` calibrated single-exposure images. The ``makeWarp`` ``Task`` is applied to generate reprojected "warp" images from the various input ``calexp`` images, and finally the ``assembleCoadd`` ``Task`` combines the warps into ``deepCoadd`` coadded products (light gray boxes along the bottom row). 
 
 Step 4. Deploy your custom coadd processing
 ===========================================
 
-As you might guess, the custom coadd processing is run via the ``pipetask run`` command. Because this processing takes longer than prior steps, it's worth adding a little bit of "infrastructure" around your ``pipetask run`` command to perform logging and timing. First, let's start my making a directory into which you'll send the log file of the coaddition processing:
+As you might guess, the custom coadd processing is run via the ``pipetask run`` command. Because this processing takes longer than prior steps, it's worth adding a little bit of "infrastructure" around your ``pipetask run`` command to perform logging and timing. First, let's start by making a directory into which you'll send the log file of the coaddition processing:
 
 .. code-block::
 
@@ -616,7 +616,7 @@ Now you have a directory called ``logs`` into which you can save the pipeline ou
     2>&1 | tee -a $LOGFILE; \
     date | tee -a $LOGFILE
     
-It may be desirable to save this shell script to a file and then launch the shell script, rather than attempting to copy all of this into the terminal prompt at once. Call the shell script ``dp02_custom_coadd_1patch.sh``. This ``dp02_custom_coadd_1patch.sh`` takes 30-35 minutes to run from start to finish. Here's what the full set of printouts looks like for a successful custom coadd processing:
+It may be desirable to save this shell script to a file and then launch the shell script, rather than attempting to copy all of this into the terminal prompt at once. Call the shell script ``dp02_custom_coadd_1patch.sh``. This ``dp02_custom_coadd_1patch.sh`` script takes 30-35 minutes to run from start to finish. Here's what the full set of printouts looks like for a successful custom coadd processing:
 
 .. code-block::
 
@@ -847,7 +847,7 @@ It may be desirable to save this shell script to a file and then launch the shel
     INFO 2023-05-02T05:42:15.751+00:00 lsst.ctrl.mpexec.mpGraphExecutor ()(mpGraphExecutor.py:518) - Executed 7 quanta successfully, 0 failed and 0 remain out of total 7 quanta.
     Tue May  2 05:42:17 UTC 2023
 
-The last line (before the timestamp printout) says "Executed 7 quanta successfully, 0 failed and 0 remain out of total 7 quanta". So that means every subcomponent of this custom coadd processing was successful. That's good news!
+The last line (before the timestamp printout) says "Executed 7 quanta successfully, 0 failed and 0 remain out of total 7 quanta". So that means every subcomponent of this custom coadd processing was successful.
 
 Optional exercises for the learner
 ==========================================
