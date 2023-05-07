@@ -617,7 +617,7 @@ Light gray rectangles with rounded corners represent data, whereas darker gray r
 Step 4. Deploy your custom coadd processing
 ===========================================
 
-Here's where it all comes together. As you might expect, the custom coadd processing is run via the ``pipetask run`` command. Because this processing takes longer than prior steps, it's worth adding a little bit of "infrastructure" around your ``pipetask run`` command to perform logging and timing. First, let's start my making a directory into which you'll send the log file of the coaddition processing:
+As you might guess, the custom coadd processing is run via the ``pipetask run`` command. Because this processing takes longer than prior steps, it's worth adding a little bit of "infrastructure" around your ``pipetask run`` command to perform logging and timing. First, let's start my making a directory into which you'll send the log file of the coaddition processing:
 
 .. code-block::
 
