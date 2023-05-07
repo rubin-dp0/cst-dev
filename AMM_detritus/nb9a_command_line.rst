@@ -437,51 +437,12 @@ So far, you've seen ``pipetask build`` and ``pipetask run``. For the ``QuantumGr
 .. code-block::
 
     tract = 4431 AND patch = 17 AND visit in (919515,924057,924085,924086,929477,930353) AND skymap = 'DC2'
-    
-3.1 How many ``quanta``?
 
-`Tutorial notebook 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_ shows that the desired custom coaddition entails executing 7 ``quanta`` (6 for ``makeWarp`` -- one per input exposure -- plus one for ``assembleCoadd``). Hopefully the command line version of this processing has the same number (and list) of ``quanta``! Let's check. Here's the ``pipetask qgraph`` command to use:
+3.1 What are the ``quanta``?
 
-.. code-block::
+`Tutorial notebook 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_ shows that the desired custom coaddition entails executing 7 ``quanta`` (6 for ``makeWarp`` -- one per input exposure -- plus one for ``assembleCoadd``). Hopefully the command line version of this processing has the same number (and list) of ``quanta``! 
 
-    pipetask qgraph \
-    -b dp02 \
-    -i 2.2i/runs/DP0.2 \
-    -p config/makeWarpAssembleCoadd.yaml#step3 \
-    -c makeWarp:doApplyFinalizedPsf=False \
-    -c makeWarp:connections.visitSummary="visitSummary" \
-    -d "tract = 4431 AND patch = 17 AND visit in (919515,924057,924085,924086,929477,930353) AND skymap = 'DC2'"
-    
-Note a few things about this command:
-
-* the command starts out with ``pipetask qgraph`` rather than ``pipetask run`` or ``pipetask build``.
-
-* the input data set ``collection`` within DP0.2 is specified via the argument ``-i 2.2i/runs/DP0.2``. It's necessary to know about the input ``collection`` in order for ``pipetask`` and Butler to figure out how many (and which) ``quanta`` are expected.
-
-* The same custom pipeline as always is specified, ``-p config/makeWarpAssembleCoadd.yaml#step3 \``.
-
-* ``-c`` is used twice, to override the default configuration parameter settings for both ``doApplyFinalizedPsf=False`` and ``connections.visitSummary``.
-
-* The query string has speen specified via the `-d` argument of ``pipetask``. Including this query constraint is really important -- without it, Butler and ``pipetask`` might try to figure out the (huge) list of ``quanta`` for custom coaddition of the entire DP0.2 data set.
-
-Let's run this first ``pipetask qgraph`` command. Be aware that this takes approximately 15 minutes to run:
-
-.. code-block::
-
-    pipetask qgraph \
-    > -b dp02 \
-    > -i 2.2i/runs/DP0.2 \
-    > -p config/makeWarpAssembleCoadd.yaml#step3 \
-    > -c makeWarp:doApplyFinalizedPsf=False \
-    > -c makeWarp:connections.visitSummary="visitSummary" \
-    > -d "tract = 4431 AND patch = 17 AND visit in (919515,924057,924085,924086,929477,930353) AND skymap = 'DC2'"
-    lsst.ctrl.mpexec.cmdLineFwk INFO: QuantumGraph contains 7 quanta for 2 tasks, graph ID: '1682993535.1936796-972'
-    
-There is only one printed line of output, which tells us that there are 7 ``quanta`` for 2 ``Tasks``, both of which make sense and match with what was found in `tutorial notebook 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_.
-
-3.2 What are the ``quanta``?
-
-It might be a little more satisfying to know the fully detailed list of 7 ``quanta``, rather than merely finding out that there are 7 ``quanta``. Thankfully, you can find out full details about the 7 quanta with only a slightly modified version of the previous ``pipetask qgraph`` command. Simply add another line to the command with ``--show graph``:
+You can find out full details about all ``quanta`` with a ``pipetask qgraph`` command. Here's the ``pipetask qgraph`` command:
 
 .. code-block::
 
@@ -494,7 +455,19 @@ It might be a little more satisfying to know the fully detailed list of 7 ``quan
     -d "tract = 4431 AND patch = 17 AND visit in (919515,924057,924085,924086,929477,930353) AND skymap = 'DC2'" \
     --show graph
     
-Like the previous ``pipetask qgraph``, this command also takes roughly 15 minutes to run. The ``--show graph`` variant produces dramatically more printouts, because it is telling you about all of the inputs and outputs of each ``quantum``:
+Be aware that this takes approximately 15 minutes to run. Note a few things about this command:
+
+* the command starts out with ``pipetask qgraph`` rather than ``pipetask run`` or ``pipetask build``.
+
+* the input data set ``collection`` within DP0.2 is specified via the argument ``-i 2.2i/runs/DP0.2``. It's necessary to know about the input ``collection`` in order for ``pipetask`` and Butler to figure out how many (and which) ``quanta`` are expected.
+
+* The same custom pipeline as always is specified, ``-p config/makeWarpAssembleCoadd.yaml#step3 \``.
+
+* ``-c`` is used twice, to override the default configuration parameter settings for both ``doApplyFinalizedPsf=False`` and ``connections.visitSummary``.
+
+* The query string has speen specified via the ``-d`` argument of ``pipetask``. Including this query constraint is really important -- without it, Butler and ``pipetask`` might try to figure out the (huge) list of ``quanta`` for custom coaddition of the entire DP0.2 data set.
+
+Below is the full output of running the above ``pipetask qgraph`` command:
 
 .. code-block::
 
@@ -593,7 +566,9 @@ Like the previous ``pipetask qgraph``, this command also takes roughly 15 minute
           DatasetType('assembleCoadd_metadata', {band, skymap, tract, patch}, PropertySet): [DataId({band: 'i', skymap: 'DC2', tract: 4431, patch: 17})]
           DatasetType('deepCoadd_inputMap', {band, skymap, tract, patch}, HealSparseMap): [DataId({band: 'i', skymap: 'DC2', tract: 4431, patch: 17})]
 
-3.3 Visualizing the ``QuantumGraph``
+As expected, there are 7 quanta (lines starting with ``Quantum N``), where ``N`` first runs from 0-5 (inclusive) for ``makeWarp`` and then there's another ``N`` = 0 ``quantum`` for ``assembleCoadd``.
+
+3.2 Visualizing the ``QuantumGraph``
 
 In addition to generating and printing out the ``QuantumGraph`` you can also visualize the ``QuantumGraph`` as a "flowchart" style diagram. Perhaps counterintuitively, visualization of the ``QuantumGraph`` is performed with ``pipetask build`` rather than ``pipetask qgraph``. This is because the ``QuyantumGraph`` visualization depends only on the structure of the pipeline definition, and not on details of exactly which patches/tracts/exposures will be processed. For this same reason, you don't need to specify all of the command line parameters (like the Butler query string) when generating the ``QuantumGraph`` visualization. The ``pipetask build`` command to generate the ``QuantumGraph`` visualization of your custom processing is:
 
