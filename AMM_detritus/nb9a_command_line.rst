@@ -263,13 +263,13 @@ Let's not modify the original ``$DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml
 
 .. code-block::
 
-    cp $DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml config/makeWarpAssembleCoadd.yaml
+    cp $DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml config/MakeWarpAssembleCoadd.yaml
     
-Note that in doing this copy you've given the resulting file a name of ``makeWarpAssembleCoadd.yaml``, which better reflects its purpose than would simply ``DRP.yaml``.
+Note that in doing this copy you've given the resulting file a name of ``MakeWarpAssembleCoadd.yaml``, which better reflects its purpose than would simply ``DRP.yaml``.
 
-Now let's edit your ``config/makeWarpAssembleCoadd.yaml`` pipeline definition file. There are multiple ways to edit a text file in a Linux environment, such as `nano <https://www.nano-editor.org/>`_, `emacs <https://www.gnu.org/software/emacs/>`_, and `vim <https://www.vim.org/>`_, all of which are available to you at the RSP terminal.
+Now let's edit your ``config/MakeWarpAssembleCoadd.yaml`` pipeline definition file. There are multiple ways to edit a text file in a Linux environment, such as `nano <https://www.nano-editor.org/>`_, `emacs <https://www.gnu.org/software/emacs/>`_, and `vim <https://www.vim.org/>`_, all of which are available to you at the RSP terminal.
 
-Using whichever text editor option you prefer, edit the ``step3`` section of ``config/makeWarpAssembleCoadd.yaml`` so that only the ``makeWarp`` and ``assembleCoadd`` tasks remain:
+Using whichever text editor option you prefer, edit the ``step3`` section of ``config/MakeWarpAssembleCoadd.yaml`` so that only the ``makeWarp`` and ``assembleCoadd`` tasks remain:
 
 .. code-block::
 
@@ -278,13 +278,13 @@ Using whichever text editor option you prefer, edit the ``step3`` section of ``c
           - makeWarp
           - assembleCoadd
 
-Make sure to save your changes when you exit the text editor! Also make sure that you did not change any of the indentation in the ``config/makeWarpAssembleCoadd.yaml`` file, for the lines that remain.
+Make sure to save your changes when you exit the text editor! Also make sure that you did not change any of the indentation in the ``config/MakeWarpAssembleCoadd.yaml`` file, for the lines that remain.
 
-To arrive at the above ``step3`` YAML, you should have deleted exactly 12 lines worth of YAML tasks from the material originally contained in ``config/makeWarpAssembleCoadd.yaml``. You can check exactly what you changed using the Linux command ``diff``, which prints out the difference between two files. The following shows the expected ``diff`` results for proper editing of the YAML pipeline definition:
+To arrive at the above ``step3`` YAML, you should have deleted exactly 12 lines worth of YAML tasks from the material originally contained in ``config/MakeWarpAssembleCoadd.yaml``. You can check exactly what you changed using the Linux command ``diff``, which prints out the difference between two files. The following shows the expected ``diff`` results for proper editing of the YAML pipeline definition:
 
 .. code-block::
 
-    diff $DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml config/makeWarpAssembleCoadd.yaml 
+    diff $DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml config/MakeWarpAssembleCoadd.yaml 
     116,127d115
     <       - detection
     <       - mergeDetections
@@ -299,7 +299,7 @@ To arrive at the above ``step3`` YAML, you should have deleted exactly 12 lines 
     <       - selectGoodSeeingVisits
     <       - templateGen
 
-The lines starting with ``<`` symbols indicate lines that were deleted from ``config/makeWarpAssembleCoadd.yaml``. Now you're ready to start running some ``pipetask`` commands at the terminal.
+The lines starting with ``<`` symbols indicate lines that were deleted from ``config/MakeWarpAssembleCoadd.yaml``. Now you're ready to start running some ``pipetask`` commands at the terminal.
 
 Step 3. Show your pipeline and its configurations
 =================================================
@@ -317,20 +317,20 @@ Some of the ``pipetask`` commands later in this tutorial require you to specify 
 .. code-block::
 
     pipetask build \
-    -p config/makeWarpAssembleCoadd.yaml#step3 \
+    -p config/MakeWarpAssembleCoadd.yaml#step3 \
     --show pipeline
     
 This is all one single terminal (shell) command, but spread out over three input lines using ``\`` for line continuation. It would be entirely equivalent to run:
 
 .. code-block::
 
-    pipetask build -p config/makeWarpAssembleCoadd.yaml#step3 --show pipeline
+    pipetask build -p config/MakeWarpAssembleCoadd.yaml#step3 --show pipeline
     
-The ``-p`` parameter of ``pipetask`` is short for ``--pipeline`` and it is critical that this parameter be specified as the new ``config/makeWarpAssembleCoadd.yaml`` file made in section 2.2. It is also critical that the ``-p`` argument contain the string ``#step3`` appended at the end of the config file name. This is because you want to only run the coaddition step to make custom coadds. Here's what running the command, and its output should look like:
+The ``-p`` parameter of ``pipetask`` is short for ``--pipeline`` and it is critical that this parameter be specified as the new ``config/MakeWarpAssembleCoadd.yaml`` file made in section 2.2. It is also critical that the ``-p`` argument contain the string ``#step3`` appended at the end of the config file name. This is because you want to only run the coaddition step to make custom coadds. Here's what running the command, and its output should look like:
 
 .. code-block::
 
-    pipetask build -p config/makeWarpAssembleCoadd.yaml#step3 --show pipeline
+    pipetask build -p config/MakeWarpAssembleCoadd.yaml#step3 --show pipeline
     description: DRP specialized for ImSim-DC2 data
     instrument: lsst.obs.lsst.LsstCamImSim
     tasks:
@@ -374,7 +374,7 @@ As mentioned in `tutorial notebook 9a <https://github.com/rubin-dp0/tutorial-not
 
     pipetask run \
     -b dp02 \
-    -p config/makeWarpAssembleCoadd.yaml#step3 \
+    -p config/MakeWarpAssembleCoadd.yaml#step3 \
     --show config=makeWarp::doApplyFinalizedPsf
     
 Notice that the ``-p`` parameter passed to ``pipetask`` has remained the same. But in order for ``pipetask run`` to operate, it also needs to know what Butler repository it's dealing with. That's why the ``-b dp02`` argument has been added. ``dp02`` is an alias that points to the `S3 <https://en.wikipedia.org/wiki/Amazon_S3>`_ location of the DP0.2 Butler repository.
@@ -387,7 +387,7 @@ Now let's look at what happens when you run the above ``pipetask command``:
 
     pipetask run \
     > -b dp02 \
-    > -p config/makeWarpAssembleCoadd.yaml#step3 \
+    > -p config/MakeWarpAssembleCoadd.yaml#step3 \
     > --show config=makeWarp::doApplyFinalizedPsf
     Matching "doApplyFinalizedPsf" without regard to case (append :NOIGNORECASE to prevent this)
     ### Configuration for task `makeWarp'
@@ -401,7 +401,7 @@ Ignore the lines about "No quantum graph" and "NOIGNORECASE" -- for the present 
 
     pipetask run \
     -b dp02 \
-    -p config/makeWarpAssembleCoadd.yaml#step3 \
+    -p config/MakeWarpAssembleCoadd.yaml#step3 \
     -c makeWarp:doApplyFinalizedPsf=False \
     --show config=makeWarp::doApplyFinalizedPsf
     
@@ -411,7 +411,7 @@ The penultimate line (``-c makeWarp:doApplyFinalizedPsf=False \``) is newly adde
 
     pipetask run \
     > -b dp02 \
-    > -p config/makeWarpAssembleCoadd.yaml#step3 \
+    > -p config/MakeWarpAssembleCoadd.yaml#step3 \
     > -c makeWarp:doApplyFinalizedPsf=False \
     > --show config=makeWarp::doApplyFinalizedPsf
     Matching "doApplyFinalizedPsf" without regard to case (append :NOIGNORECASE to prevent this)
@@ -449,7 +449,7 @@ You can find out full details about all ``quanta`` with a ``pipetask qgraph`` co
     pipetask qgraph \
     -b dp02 \
     -i 2.2i/runs/DP0.2 \
-    -p config/makeWarpAssembleCoadd.yaml#step3 \
+    -p config/MakeWarpAssembleCoadd.yaml#step3 \
     -c makeWarp:doApplyFinalizedPsf=False \
     -c makeWarp:connections.visitSummary="visitSummary" \
     -d "tract = 4431 AND patch = 17 AND visit in (919515,924057,924085,924086,929477,930353) AND skymap = 'DC2'" \
@@ -461,7 +461,7 @@ Be aware that this takes approximately 15 minutes to run. Note a few things abou
 
 * the input data set ``collection`` within DP0.2 is specified via the argument ``-i 2.2i/runs/DP0.2``. It's necessary to know about the input ``collection`` in order for ``pipetask`` and Butler to figure out how many (and which) ``quanta`` are expected.
 
-* The same custom pipeline as always is specified, ``-p config/makeWarpAssembleCoadd.yaml#step3 \``.
+* The same custom pipeline as always is specified, ``-p config/MakeWarpAssembleCoadd.yaml#step3 \``.
 
 * ``-c`` is used twice, to override the default configuration parameter settings for both ``doApplyFinalizedPsf=False`` and ``connections.visitSummary``.
 
@@ -474,7 +474,7 @@ Below is the full output of running the above ``pipetask qgraph`` command:
     pipetask qgraph \
     > -b dp02 \
     > -i 2.2i/runs/DP0.2 \
-    > -p config/makeWarpAssembleCoadd.yaml#step3 \
+    > -p config/MakeWarpAssembleCoadd.yaml#step3 \
     > -c makeWarp:doApplyFinalizedPsf=False \
     > -c makeWarp:connections.visitSummary="visitSummary" \
     > -d "tract = 4431 AND patch = 17 AND visit in (919515,924057,924085,924086,929477,930353) AND skymap = 'DC2'" \
@@ -576,7 +576,7 @@ In addition to generating and printing out the ``QuantumGraph`` you can also vis
 .. code-block::
 
     pipetask build \
-    -p config/makeWarpAssembleCoadd.yaml#step3 \
+    -p config/MakeWarpAssembleCoadd.yaml#step3 \
     --pipeline-dot pipeline.dot; \
     dot pipeline.dot -T
     > makeWarpAssembleCoadd.pdf
@@ -609,7 +609,7 @@ Now you have a directory called ``logs`` into which you can save the pipeline ou
     -b dp02 \
     -i 2.2i/runs/DP0.2 \
     -o u/$USER/custom_coadd_window1_cl00 \
-    -p config/makeWarpAssembleCoadd.yaml#step3 \
+    -p config/MakeWarpAssembleCoadd.yaml#step3 \
     -c makeWarp:doApplyFinalizedPsf=False \
     -c makeWarp:connections.visitSummary="visitSummary" \
     -d "tract = 4431 AND patch = 17 AND visit in (919515,924057,924085,924086,929477,930353) AND skymap = 'DC2'" \
