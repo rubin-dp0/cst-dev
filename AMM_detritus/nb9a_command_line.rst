@@ -280,7 +280,7 @@ Using whichever text editor option you prefer, edit the ``step3`` section of ``c
 
 Make sure to save your changes when you exit the text editor! Also make sure that you did not change any of the indentation in the ``config/makeWarpAssembleCoadd.yaml`` file, for the lines that remain.
 
-To arrive at the above ``step3`` YAML, you should have deleted exactly 12 lines worth of YAML tasks from the material originally contained in ``DRP.yaml``. You can check exactly what you changed using the Linux command ``diff``, which prints out the difference between two files. The following shows the expected ``diff`` results for proper editing of the YAML pipeline definition:
+To arrive at the above ``step3`` YAML, you should have deleted exactly 12 lines worth of YAML tasks from the material originally contained in ``config/makeWarpAssembleCoadd.yaml``. You can check exactly what you changed using the Linux command ``diff``, which prints out the difference between two files. The following shows the expected ``diff`` results for proper editing of the YAML pipeline definition:
 
 .. code-block::
 
@@ -299,7 +299,7 @@ To arrive at the above ``step3`` YAML, you should have deleted exactly 12 lines 
     <       - selectGoodSeeingVisits
     <       - templateGen
 
-The lines starting with ``<`` symbols indicate lines that were deleted from ``$DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml``. Now you're ready to start running some ``pipetask`` commands at the terminal!
+The lines starting with ``<`` symbols indicate lines that were deleted from ``config/makeWarpAssembleCoadd.yaml``. Now you're ready to start running some ``pipetask`` commands at the terminal.
 
 Step 3. Show your pipeline and its configurations
 =================================================
