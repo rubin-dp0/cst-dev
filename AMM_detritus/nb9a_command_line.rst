@@ -326,8 +326,6 @@ This is all one single terminal (shell) command, but spread out over three input
 
     pipetask build -p config/makeWarpAssembleCoadd.yaml#step3 --show pipeline
     
-Separating out each ``pipetask`` input can sometimes result in easier debugging, as it is easy to see exactly what input was specified for each ``pipetask`` parameter.
-
 The ``-p`` parameter of ``pipetask`` is short for ``--pipeline`` and it is critical that this parameter be specified as the new ``config/makeWarpAssembleCoadd.yaml`` file made in section 2.2. It is also critical that the ``-p`` argument contain the string ``#step3`` appended at the end of the config file name. This is because you want to only run the coaddition step to make custom coadds (other steps like ``step1`` have to do with reducing the single-frame images, which isn't relevant). Here's what running the command, and its output should look like:
 
 .. code-block::
