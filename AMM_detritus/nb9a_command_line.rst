@@ -78,12 +78,12 @@ The strategy for running these custom coadds via the command line is to start wi
 
 2.1. Inspect the DP0.2 YAML pipeline definition
 
-Let's start by taking a look at the DRP pipeline YAML pipeline definition file for DP0.2. As mentioned in notebook `tutorial 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_, this can be viewed from within the Rubin Science Platform (RSP) at ``$DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml``. There are multiple ways to view an `ASCII <https://en.wikipedia.org/wiki/ASCII>`_ (plain text) file such as ``DRP.yaml`` from a Linux terminal. Here we use a program called `cat <https://en.wikipedia.org/wiki/Cat_(Unix)>`_.
+Let's start by taking a look at the DRP pipeline YAML pipeline definition file for DP0.2. As mentioned in notebook `tutorial 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_, this can be viewed from within the Rubin Science Platform (RSP) at ``$DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml``. There are multiple ways to view an `ASCII <https://en.wikipedia.org/wiki/ASCII>`_ (plain text) file such as ``DRP.yaml`` from a Linux terminal. Here we use a program called `head <https://en.wikipedia.org/wiki/Head_(Unix)>`_.
 
 
 .. code-block::
 
-    cat $DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml
+    head -143 $DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml
     description: DRP specialized for ImSim-DC2 data
     instrument: lsst.obs.lsst.LsstCamImSim
     imports:
@@ -227,124 +227,9 @@ Let's start by taking a look at the DRP pipeline YAML pipeline definition file f
     
           This subset is considered a workaround for missing middleware and task
           functionality.  It may be removed in the future.
-      step4:
-        subset:
-          - forcedPhotCcd
-          - forcedPhotDiffim
-          - getTemplate
-          - subtractImages
-          - detectAndMeasureDiaSources
-          - transformDiaSourceCat
-          - writeForcedSourceTable
-        description: |
-          Tasks that can be run together, but only after the 'step1', 'step2' and
-          'step3' subsets
-    
-          These detector-level tasks should not be run with 'tract' or 'patch' as
-          part of the data ID expression if all reference catalogs or diffIm
-          templates that cover these detector-level quanta are desired.
-      step5:
-        subset:
-          - drpAssociation
-          - drpDiaCalculation
-          - forcedPhotCcdOnDiaObjects
-          - forcedPhotDiffOnDiaObjects
-          - transformForcedSourceTable
-          - consolidateForcedSourceTable
-          - consolidateAssocDiaSourceTable
-          - consolidateFullDiaObjectTable
-          - writeForcedSourceOnDiaObjectTable
-          - transformForcedSourceOnDiaObjectTable
-          - consolidateForcedSourceOnDiaObjectTable
-        description: |
-          Tasks that can be run together, but only after the 'step1', 'step2',
-          'step3', and 'step4' subsets
-    
-          This step includes patch-level aggregation Tasks. These should be run
-          with explicit 'tract' constraints in the data query, otherwise quanta
-          will be created for jobs with only partial visit coverage.
-          'consolidateForcedSourceTable' is a tract-level task that aggregates
-          patches and should be rerun if any of the patches fail.
-      step6:
-        subset:
-          - consolidateDiaSourceTable
-        description: |
-          Tasks that can be run together, but only after the 'step1', 'step2',
-          'step3', and 'step4' subsets
-    
-          This step includes visit-level aggregation tasks. Running without tract
-          or patch in the data query is recommended, otherwise the outputs of
-          consolidateDiaSourceTable will not contain complete visits.
-    
-          This subset is separate from step4 to signal to operators to pause to
-          assess unexpected image differencing failures before these aggregation
-          steps. Otherwise, if run in the same quantum graph, aggregated data
-          products (e.g. diaObjects) would not be created if one or more of the
-          expected inputs is missing.
-      step7:
-        subset:
-          - consolidateHealSparsePropertyMaps
-        description: |
-          Tasks that should be run as the final step that require global inputs,
-          and can be run after the 'step3' subset.
-    
-          This step has global aggregation tasks to run over all visits, detectors,
-          tracts, etc.  This step should be run only with the instrument constraint
-          in the data query.
-      faro_all:
-        subset:
-          # visit-level on single-frame products
-          - nsrcMeasVisit
-          - TE3
-          - TE4
-          # tract-level, matched-visit on single-frame products
-          - matchCatalogsTract
-          - matchCatalogsPatch
-          - matchCatalogsPatchMultiBand
-          - matchCatalogsTractMag17to21p5
-          - matchCatalogsTractStarsSNR5to80
-          - matchCatalogsTractGxsSNR5to80
-          - PA1
-          - PF1_design
-          - AM1
-          - AM2
-          - AM3
-          - AD1_design
-          - AD2_design
-          - AD3_design
-          - AF1_design
-          - AF2_design
-          - AF3_design
-          - AB1
-          - modelPhotRepGal1
-          - modelPhotRepGal2
-          - modelPhotRepGal3
-          - modelPhotRepGal4
-          - modelPhotRepStar1
-          - modelPhotRepStar2
-          - modelPhotRepStar3
-          - modelPhotRepStar4
-          - psfPhotRepStar1
-          - psfPhotRepStar2
-          - psfPhotRepStar3
-          - psfPhotRepStar4
-          # tract-level on coadd products
-          - matchObjectToTruth
-          - compareObjectToTruth
-          - TE1
-          - TE2
-          - wPerp
-          - skyObjectMean
-          - skyObjectStd
-        description: |
-          Set of tasks for calculation of metrics via faro.
-          These tasks are a mix of visit- and tract-level.
-    
-          Tasks that require single-frame products use Calibrated Source Tables,
-          which are available after consolidateSourceTable (step2).
-          Tasks that require coadd products use Object Tables which are available
-          after consolidateObjectTable (step3).
-          
+
+``head -143`` is used to only show the first 143 (of > 250 total) lines of the file, as the later pipeline stages toward the end of the YAML file are not relevant for this tutorial.
+
 2.2. Edit the YAML pipeline definition for making custom coadds
 
 That's a lot of pipeline definition YAML! Luckily, it's only necessary for your purposes to be concerned with the ``step3`` (coadd-level processing) portion of the pipeline definition, which is shown below.
