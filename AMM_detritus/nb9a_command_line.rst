@@ -38,7 +38,7 @@ If you are **not** using ``w_2022_40`` you **must** log out and start a new serv
  4. Note that it might take a few minutes to start your server with an old image.
 
 **Why do I need to use an old image for this tutorial?**
-In this tutorial and in the future with real LSST data, users will be able to recreate coadds starting with intermediate data products (the warps).
+In this tutorial and in the future with real LSST data, users will be able to recreate coadds starting with intermediate data products (the `warps <https://pipelines.lsst.io/getting-started/coaddition.html?highlight=warp#warping-images-onto-the-skymap>`_).
 On Feb 16 2023, as documented in the `Major Updates Log <https://dp0-2.lsst.io/tutorials-examples/major-updates-log.html#major-updates-log>`_ for DP0.2 tutorials, the recommended image of the RSP at data.lsst.cloud was bumped from Weekly 2022_40 to Weekly 2023_07.
 However, the latest versions of the pipelines are not compatible with the intermediate data products of DP0.2, which were produced in early 2022.
 To update this tutorial to be able to use Weekly 2023_07, it would have to demonstrate how to recreate coadds *starting with the raw data products*.
