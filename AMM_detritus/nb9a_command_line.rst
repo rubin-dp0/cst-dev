@@ -1,5 +1,5 @@
 ######################################################
-02. Custom Coadds from the Command Line (intermediate)
+02. Custom Coadds from the Command Line (advanced)
 ######################################################
 
 .. This section should provide a brief, top-level description of the page.
@@ -8,7 +8,7 @@
 
 **Last verified to run:** 05/02/2023
 
-**Targeted learning level:** Intermediate
+**Targeted learning level:** Advanced
 
 **Container size:** large
 
