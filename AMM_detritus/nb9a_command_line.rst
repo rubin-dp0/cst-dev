@@ -606,7 +606,7 @@ Now you have a directory called ``logs`` into which you can save the pipeline ou
     LOGFILE=$LOGDIR/makeWarpAssembleCoadd.log; \
     date | tee $LOGFILE; \
     pipetask --long-log run --register-dataset-types \
-    --log-file $LOGFILE
+    --log-file $LOGFILE \
     -b dp02 \
     -i 2.2i/runs/DP0.2 \
     -o u/$USER/custom_coadd_window1_cl00 \
