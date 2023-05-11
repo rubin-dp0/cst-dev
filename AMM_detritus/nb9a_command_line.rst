@@ -279,8 +279,8 @@ Notice that the printed configuration parameter value is indeed ``False`` i.e., 
 
     -c makeWarp:connections.visitSummary="visitSummary" \
     
-Step 3. Explore and visualize the ``QuantumGraph``
-==============================================
+Step 4. Explore and visualize the ``QuantumGraph``
+==================================================
 
 Before actually deploying the custom coaddition, let's take some time to understand the ``QuantumGraph`` of the processing to be run. The ``QuantumGraph`` is `a tool <https://pipelines.lsst.io/py-api/lsst.pipe.base.QuantumGraph.html#lsst.pipe.base.QuantumGraph>`_ used by the LSST Science Pipelines to break a large processing into relatively "bite-sized" ``quanta`` and arrange these quanta into a sequence such that all inputs needed by a given ``quantum`` are available for the execution of that ``quantum``. In the present case, you will not be doing an especially large processing, but for production deployments it makes sense to inspect and validate the ``QuantumGraph`` before proceeding straight to full-scale processing launch.
 
@@ -290,7 +290,7 @@ So far, you've seen ``pipetask build`` and ``pipetask run``. For the ``QuantumGr
 
     tract = 4431 AND patch = 17 AND visit in (919515,924057,924085,924086,929477,930353) AND skymap = 'DC2'
 
-3.1 What are the ``quanta``?
+4.1 What are the ``quanta``?
 
 `Tutorial notebook 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_ shows that the desired custom coaddition entails executing 7 ``quanta`` (6 for ``makeWarp`` -- one per input exposure -- plus one for ``assembleCoadd``). Hopefully the command line version of this processing has the same number (and list) of ``quanta``! 
 
@@ -420,7 +420,7 @@ Below is the full output of running the above ``pipetask qgraph`` command:
 
 As expected, there are 7 quanta (lines starting with ``Quantum N``), where ``N`` first runs from 0-5 (inclusive) for ``makeWarp`` and then there's another ``N`` = 0 ``quantum`` for ``assembleCoadd``.
 
-3.2 Visualizing the ``QuantumGraph``
+4.2 Visualizing the ``QuantumGraph``
 
 In addition to generating and printing out the ``QuantumGraph`` you can also visualize the ``QuantumGraph`` as a "flowchart" style diagram. Perhaps counterintuitively, visualization of the ``QuantumGraph`` is performed with ``pipetask build`` rather than ``pipetask qgraph``. This is because the ``QuantumGraph`` visualization depends only on the structure of the pipeline definition, and not on details of exactly which patches/tracts/exposures will be processed. For this same reason, you don't need to specify all of the command line parameters (like the Butler query string) when generating the ``QuantumGraph`` visualization. The ``pipetask build`` command to generate the ``QuantumGraph`` visualization of your custom coadd processing is:
 
@@ -441,7 +441,7 @@ This command executes very fast (roughly 5 seconds), again because it is not per
 
 Light gray rectangles with rounded corners represent data, whereas darker gray rectangles with sharp corners represent pipeline ``Tasks``. The arrows connecting the data and ``Tasks`` illustrate the data processing flow. The data processing starts at the top, with the ``calexp`` calibrated single-exposure images. The ``makeWarp`` ``Task`` is applied to generate reprojected "warp" images from the various input ``calexp`` images, and finally the ``assembleCoadd`` ``Task`` combines the warps into ``deepCoadd`` coadded products (light gray boxes along the bottom row). 
 
-Step 4. Deploy your custom coadd processing
+Step 5. Deploy your custom coadd processing
 ===========================================
 
 As you might guess, the custom coadd processing is run via the ``pipetask run`` command. Because this processing takes longer than prior steps, it's worth adding a little bit of "infrastructure" around your ``pipetask run`` command to perform logging and timing. First, let's start by making a directory into which you'll send the log file of the coaddition processing:
@@ -710,4 +710,4 @@ Optional exercises for the learner
 
 * Try using the same two configuration parameter modifications as did this tutorial, but implementing them via a separate configuration (``.py``) file, rather than via the ``pipetask`` ``-c`` argument (hint: to do this, you'd use the ``-C`` argument for ``pipetask``).
 
-* Run the ``pipetask qgraph`` command from Section 3.1, but with the final line ``--show graph`` removed. This still takes roughly 15 minutes, but prints out a much more concise summary listing only the total number of quanta to be executed, which should be 7.
+* Run the ``pipetask qgraph`` command from section 4.1, but with the final line ``--show graph`` removed. This still takes roughly 15 minutes, but prints out a much more concise summary listing only the total number of quanta to be executed, which should be 7.
