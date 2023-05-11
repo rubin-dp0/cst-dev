@@ -69,7 +69,7 @@ A (hypothetical) supernova went off at (RA, Dec) = (55.745834, -32.269167) degre
      eups list lsst_distrib
      g0b29ad24fb+9b30730ed8       current w_2022_40 setup
 
-Step 2. Build your custom coaddition pipeline
+Step 2. Create your custom coaddition pipeline
 =============================================
 
 As you saw in tutorial notebook 9b, you do not need to rerun the entire DP0.2 data processing in order to obtain custom coadds. You only need to run a subset of the tasks that make up ``step3`` of the DP0.2 processing, where ``step3`` refers to coadd-level processing. Specifically, you want to rerun only the ``makeWarp`` and ``assembleCoadd`` tasks.
