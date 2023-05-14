@@ -6,13 +6,13 @@
 
 **Contact author:** Aaron Meisner
 
-**Last verified to run:** 05/02/2023
+**Last verified to run:** 05/14/2023
 
 **Targeted learning level:** Advanced
 
 **Container size:** large
 
-**Credit:** This command line tutorial is based on the corresponding notebook tutorial by Melissa Graham. The command line approach is heavily influenced by Shenming Fu's recipe for reducing `DECam <https://noirlab.edu/science/programs/ctio/instruments/Dark-Energy-Camera>`_ data with the Gen3 LSST Science Pipelines, which is in turn based on `Lee Kelvin's Merian processing instructions <https://hackmd.io/@lsk/merian>`_.
+**Credit:** This command line tutorial is based on the `corresponding notebook tutorial <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_ by Melissa Graham. The command line approach is heavily influenced by Shenming Fu's recipe for reducing `DECam <https://noirlab.edu/science/programs/ctio/instruments/Dark-Energy-Camera>`_ data with the Gen3 LSST Science Pipelines, which is in turn based on `Lee Kelvin's Merian processing instructions <https://hackmd.io/@lsk/merian>`_.
 
 **Introduction:** 
 This tutorial shows how to use command line ``pipetask`` invocations to produce custom coadds from simulated single-exposure Rubin/LSST images. It is meant to parallel the corresponding Jupyter Notebook tutorial entitled `Construct a Custom Coadded Image <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_.
@@ -56,17 +56,19 @@ Per `notebook 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_C
 
 1.2. In the launcher window under "Other", select the terminal.
 
-1.3. Set up the Rubin Observatory environment.
+1.3. Set up the Rubin/LSST software stack environment.
 
 .. code-block::
 
-    setup lsst_distrib
+    $ setup lsst_distrib
     
+In this tutorial, the ``$`` sign is used to indicate a command issued at the RSP terminal -- do not include the ``$`` in the command you issue.
+
 1.4. Perform a command line verification that you are using the correct ``w_2022_40`` version of the LSST Science Pipelines.
 
 .. code-block::
 
-     eups list lsst_distrib
+     $ eups list lsst_distrib
      g0b29ad24fb+9b30730ed8       current w_2022_40 setup
 
 Step 2. Create your custom coaddition pipeline
@@ -82,13 +84,13 @@ Ensure that you're in the working directory on RSP that you've chosen to be the 
 
 .. code-block::
 
-    mkdir pipelines
+    $ mkdir pipelines
 
 Now make yourself a local copy of the full DP0.2 pipeline definition YAML:
 
 .. code-block::
 
-    pipetask build -p $DRP_PIPE_DIR/pipelines/LSSTCam-imSim/DRP-test-med-1.yaml \
+    $ pipetask build -p $DRP_PIPE_DIR/pipelines/LSSTCam-imSim/DRP-test-med-1.yaml \
     --show pipeline > pipelines/MakeWarpAssembleCoadd.yaml
 
 The above is the first of several ``pipetask`` commands used throughout this tutorial. `pipetask <https://pipelines.lsst.io/modules/lsst.ctrl.mpexec/pipetask.html>`_ commands are provided as part of the LSST Science Pipelines software stack and are used to build, visualize, and run processing pipelines from the terminal. When used as above with the ``--show pipeline`` option, ``pipetask build`` simply assembles and prints out the YAML pipeline definition specified via the ``-p`` argument.
@@ -98,7 +100,7 @@ Now let's take a look at your newly created ``pipelines/MakeWarpAssembleCoadd.ya
 
 .. code-block::
 
-    head -3151 pipelines/MakeWarpAssembleCoadd.yaml  |tail -19
+    $ head -3151 pipelines/MakeWarpAssembleCoadd.yaml  |tail -19
       step3:
         subset:
             - writeObjectTable
@@ -154,7 +156,7 @@ Let's not jump straight into running the pipeline, but rather start by checking 
 
 .. code-block::
 
-    pipetask build \
+    $ pipetask build \
     -p pipelines/MakeWarpAssembleCoadd.yaml#step3 \
     --show pipeline
     
@@ -162,13 +164,13 @@ This is all one single terminal (shell) command, but spread out over three input
 
 .. code-block::
 
-    pipetask build -p pipelines/MakeWarpAssembleCoadd.yaml#step3 --show pipeline
+    $ pipetask build -p pipelines/MakeWarpAssembleCoadd.yaml#step3 --show pipeline
     
 The ``-p`` parameter of ``pipetask`` is short for ``--pipeline`` and it is critical that this parameter be specified as the new ``pipelines/MakeWarpAssembleCoadd.yaml`` file made in section 2.2. It is also critical that the ``-p`` argument contain the string ``#step3`` appended at the end of the config file name. This is because you want to only run the coaddition step to make custom coadds. Here's what running the command, and its output should look like:
 
 .. code-block::
 
-    pipetask build -p pipelines/MakeWarpAssembleCoadd.yaml#step3 --show pipeline
+    $ pipetask build -p pipelines/MakeWarpAssembleCoadd.yaml#step3 --show pipeline
     description: DRP specialized for the ImSim-DC2 test-med-1 dataset
     instrument: lsst.obs.lsst.LsstCamImSim
     parameters:
@@ -213,7 +215,7 @@ As mentioned in `tutorial notebook 9a <https://github.com/rubin-dp0/tutorial-not
 
 .. code-block::
 
-    pipetask run \
+    $ pipetask run \
     -b dp02 \
     -p pipelines/MakeWarpAssembleCoadd.yaml#step3 \
     --show config=makeWarp::doApplyFinalizedPsf
@@ -226,7 +228,7 @@ Now let's look at what happens when you run the above ``pipetask command``:
 
 .. code-block::
 
-    pipetask run \
+    $ pipetask run \
     > -b dp02 \
     > -p pipelines/MakeWarpAssembleCoadd.yaml#step3 \
     > --show config=makeWarp::doApplyFinalizedPsf
@@ -240,7 +242,7 @@ Ignore the lines about "No quantum graph" and "NOIGNORECASE" -- for the present 
 
 .. code-block::
 
-    pipetask run \
+    $ pipetask run \
     -b dp02 \
     -p pipelines/MakeWarpAssembleCoadd.yaml#step3 \
     -c makeWarp:doApplyFinalizedPsf=False \
@@ -250,7 +252,7 @@ The penultimate line (``-c makeWarp:doApplyFinalizedPsf=False \``) is newly adde
 
 .. code-block::
 
-    pipetask run \
+    $ pipetask run \
     > -b dp02 \
     > -p pipelines/MakeWarpAssembleCoadd.yaml#step3 \
     > -c makeWarp:doApplyFinalizedPsf=False \
@@ -287,7 +289,7 @@ You can find out full details about all ``quanta`` with a ``pipetask qgraph`` co
 
 .. code-block::
 
-    pipetask qgraph \
+    $ pipetask qgraph \
     -b dp02 \
     -i 2.2i/runs/DP0.2 \
     -p pipelines/MakeWarpAssembleCoadd.yaml#step3 \
@@ -312,7 +314,7 @@ Below is the full output of running the above ``pipetask qgraph`` command:
 
 .. code-block::
 
-    pipetask qgraph \
+    $ pipetask qgraph \
     > -b dp02 \
     > -i 2.2i/runs/DP0.2 \
     > -p pipelines/MakeWarpAssembleCoadd.yaml#step3 \
@@ -416,7 +418,7 @@ In addition to generating and printing out the ``QuantumGraph`` you can also vis
 
 .. code-block::
 
-    pipetask build \
+    $ pipetask build \
     -p pipelines/MakeWarpAssembleCoadd.yaml#step3 \
     --pipeline-dot pipeline.dot; \
     dot pipeline.dot -Tpdf > makeWarpAssembleCoadd.pdf
@@ -436,8 +438,8 @@ As you might guess, the custom coadd processing is run via the ``pipetask run`` 
 
 .. code-block::
 
-    export LOGDIR=logs
-    mkdir $LOGDIR
+    $ export LOGDIR=logs
+    $ mkdir $LOGDIR
     
 Now you have a directory called ``logs`` into which you can save the pipeline outputs printed when creating your custom coadds. Send the logging printouts both to the terminal and to the log file using the Linux ``tee`` command. Also, print out the processing's start time at the very beginning and the time of completion at the very end, in both cases using the ``Linux`` ``date`` command. This will keep a record of how long your custom coadd processing took end-to-end. Putting this all together, the final commands to generate your custom coadds are:
 
@@ -459,7 +461,7 @@ It may be desirable to save this shell script to a file and then launch the shel
 
 .. code-block::
 
-    . dp02_custom_coadd_1patch.sh
+    $ . dp02_custom_coadd_1patch.sh
     Sun May 14 10:14:40 UTC 2023
     INFO 2023-05-14T10:31:11.940+00:00 lsst.ctrl.mpexec.cmdLineFwk ()(cmdLineFwk.py:581) - QuantumGraph contains 7 quanta for 2 tasks, graph ID: '1684060271.9353757-1754'
     INFO 2023-05-14T10:31:34.866+00:00 lsst.makeWarp.select (makeWarp:{instrument: 'LSSTCam-imSim', skymap: 'DC2', tract: 4431, patch: 17, visit: 919515, ...})(selectImages.py:228) - Selecting calexp {instrument: 'LSSTCam-imSim', detector: 110, visit: 919515, ...}
