@@ -419,8 +419,7 @@ In addition to generating and printing out the ``QuantumGraph`` you can also vis
     pipetask build \
     -p pipelines/MakeWarpAssembleCoadd.yaml#step3 \
     --pipeline-dot pipeline.dot; \
-    dot pipeline.dot -T
-    > makeWarpAssembleCoadd.pdf
+    dot pipeline.dot -Tpdf > makeWarpAssembleCoadd.pdf
     
 This command executes very fast (roughly 5 seconds), again because it is not performing any search through the DP0.2 data set for e.g., input exposures. The ``pipeline.dot`` output is essentially an intermediate temporary file which you may wish to delete. The PDF you make (shown below) can be opened by double clicking on its file name in the JupyterHub file browser.
 
