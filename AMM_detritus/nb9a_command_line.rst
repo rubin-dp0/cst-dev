@@ -429,7 +429,7 @@ This command executes very fast (roughly 5 seconds), again because it is not per
   :width: 1500
   :alt: QuantumGraph diagram for custom coaddition
 
-Light gray rectangles with rounded corners represent data, whereas darker gray rectangles with sharp corners represent pipeline ``Tasks``. The arrows connecting the data and ``Tasks`` illustrate the data processing flow. The data processing starts at the top, with the ``calexp`` calibrated single-exposure images (also known as Processed Visit Images; PVIs). The ``makeWarp`` Task is applied to generate reprojected "warp" images from the various input ``calexp`` images, and finally the ``assembleCoadd`` Task combines the warps into ``deepCoadd`` coadded products (light gray boxes along the bottom row). 
+Light gray rectangles with rounded corners represent data, whereas darker gray rectangles with sharp corners represent pipeline Tasks. The arrows connecting the data and Tasks illustrate the data processing flow. The data processing starts at the top, with the ``calexp`` calibrated single-exposure images (also known as Processed Visit Images; PVIs). The ``makeWarp`` Task is applied to generate reprojected "warp" images from the various input ``calexp`` images, and finally the ``assembleCoadd`` Task combines the warps into ``deepCoadd`` coadded products (light gray boxes along the bottom row). 
 
 Step 5. Deploy your custom coadd processing
 ===========================================
