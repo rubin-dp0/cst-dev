@@ -127,7 +127,7 @@ The specific arguments to ``head`` and ``tail`` here are used to only show the r
     
 Now let's edit your ``pipelines/MakeWarpAssembleCoadd.yaml`` pipeline definition file. There are multiple ways to edit a text file in a Linux environment, such as `nano <https://www.nano-editor.org/>`_, `emacs <https://www.gnu.org/software/emacs/>`_, and `vim <https://www.vim.org/>`_, all of which are available to you at the RSP terminal.
 
-Using whichever text editor option you prefer, edit the ``step3`` section of ``pipelines/MakeWarpAssembleCoadd.yaml`` so that only the ``makeWarp`` and ``assembleCoadd`` tasks remain. To do this, you should delete exactly 12 lines of YAML from within the ``step3`` section, specifically the lines containing: ``- detection``, ``- mergeDetections``, ``- deblend``, ``- measure``, ``- mergeMeasurements``, ``- forcedPhotCoadd``, ``- transformObjectTable``, ``- writeObjectTable``, ``- consolidateObjectTable``, ``- healSparsePropertyMaps``, ``- selectGoodSeeingVisits``, ``- templateGen``). Now the `step3` YAML section shown above in Section 2.1 should look like this:
+Using whichever text editor option you prefer, edit the ``step3`` section of ``pipelines/MakeWarpAssembleCoadd.yaml`` so that only the ``makeWarp`` and ``assembleCoadd`` tasks remain. To do this, you should delete exactly 12 lines of YAML from within the ``step3`` section, specifically the lines containing: ``- detection``, ``- mergeDetections``, ``- deblend``, ``- measure``, ``- mergeMeasurements``, ``- forcedPhotCoadd``, ``- transformObjectTable``, ``- writeObjectTable``, ``- consolidateObjectTable``, ``- healSparsePropertyMaps``, ``- selectGoodSeeingVisits``, and ``- templateGen``. Now the `step3` YAML section shown above in Section 2.1 should look like this:
 
 .. code-block::
 
@@ -139,7 +139,7 @@ Using whichever text editor option you prefer, edit the ``step3`` section of ``p
             Tasks that can be run together, but only after the 'step1' and 'step2'
             subsets.
 
-Make sure to save your changes when you exit the text editor! Also make sure that you did not change any of the indentation in the ``pipelines/MakeWarpAssembleCoadd.yaml`` file, for the lines that remain.
+Make sure to save your changes when you exit the text editor! Also make sure that you did not change any of the indentation in the ``pipelines/MakeWarpAssembleCoadd.yaml`` file, for the lines that remain. Note that the ordering of the ``- makeWarp`` and ``- assembleCoadd`` lines relative to each other `does not matter <https://pipelines.lsst.io/modules/lsst.pipe.base/creating-a-pipeline.html#a-basic-pipeline>`_.
 
 Step 3. Show your pipeline and its configurations
 =================================================
