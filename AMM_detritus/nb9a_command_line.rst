@@ -78,7 +78,7 @@ The strategy for running these custom coadds via the command line is to start wi
 
 2.1. Inspect the DP0.2 YAML pipeline definition
 
-Let's start by making a local copy of the DRP YAML pipeline definition file for DP0.2. It is conventional to put pipeline definition YAML files in a ``pipelines`` subdirectory, so let's make one in your current working directory:
+Ensure that you're in the working directory on RSP that you've chosen to be the place from which you will run the custom coadd processing. Let's start by making a local copy of the DRP YAML pipeline definition file for DP0.2. It is conventional to put pipeline definition YAML files in a ``pipelines`` subdirectory, so let's make one in your current working directory:
 
 .. code-block::
 
@@ -96,7 +96,7 @@ Now let's take a look at your newly created ``pipelines/MakeWarpAssembleCoadd.ya
 
 .. code-block::
 
-    head -3148 pipelines/MakeWarpAssembleCoadd.yaml  |tail -16
+    head -3151 pipelines/MakeWarpAssembleCoadd.yaml  |tail -19
       step3:
         subset:
             - writeObjectTable
@@ -113,28 +113,17 @@ Now let's take a look at your newly created ``pipelines/MakeWarpAssembleCoadd.ya
             - assembleCoadd
             - selectGoodSeeingVisits
             - transformObjectTable
+            description: |
+              Tasks that can be run together, but only after the 'step1' and 'step2'
+              subsets.
 
 The specific arguments to ``head`` and ``tail`` here are used to only show the relevant lines of the full YAML file. Reading through the entirety of ``pipelines/MakeWarpAssembleCoadd.yaml`` is left as an optional exercise for the learner.
 
 2.2. Edit the YAML pipeline definition for making custom coadds
-
-Ensure that you're in the working directory on RSP that you've chosen to be the place from which you will run the custom coadd processing. It is somewhat of a convention to put pipeline configuration files in a subdirectory named `config`. So let's make that `config` subdirectory:
-
-.. code-block::
-
-    mkdir config
     
-Let's not modify the original ``$DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml`` file in place, but rather bring in a copy to the newly made `config` directory. You will then edit this copy to customize it for the desired coaddition.
+Now let's edit your ``pipelines/MakeWarpAssembleCoadd.yaml`` pipeline definition file. There are multiple ways to edit a text file in a Linux environment, such as `nano <https://www.nano-editor.org/>`_, `emacs <https://www.gnu.org/software/emacs/>`_, and `vim <https://www.vim.org/>`_, all of which are available to you at the RSP terminal.
 
-.. code-block::
-
-    cp $DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml config/MakeWarpAssembleCoadd.yaml
-    
-Note that in doing this copy you've given the resulting file a name of ``MakeWarpAssembleCoadd.yaml``, which better reflects its purpose than would simply ``DRP.yaml``.
-
-Now let's edit your ``config/MakeWarpAssembleCoadd.yaml`` pipeline definition file. There are multiple ways to edit a text file in a Linux environment, such as `nano <https://www.nano-editor.org/>`_, `emacs <https://www.gnu.org/software/emacs/>`_, and `vim <https://www.vim.org/>`_, all of which are available to you at the RSP terminal.
-
-Using whichever text editor option you prefer, edit the ``step3`` section of ``config/MakeWarpAssembleCoadd.yaml`` so that only the ``makeWarp`` and ``assembleCoadd`` tasks remain:
+Using whichever text editor option you prefer, edit the ``step3`` section of ``pipelines/MakeWarpAssembleCoadd.yaml`` so that only the ``makeWarp`` and ``assembleCoadd`` tasks remain. To do this, you should delete exactly 12 lines of YAML from within the ``step3`` section, specifically the lines containing: ``- detection``, ``- mergeDetections``, ``- deblend``, ``- measure``, ``- mergeMeasurements``, ``- forcedPhotCoadd``, ``- transformObjectTable``, ``- writeObjectTable``, ``- consolidateObjectTable``, ``- healSparsePropertyMaps``, ``- selectGoodSeeingVisits``, ``- templateGen``). Now the `step3` YAML section shown above in Section 2.1 should look like this:
 
 .. code-block::
 
@@ -142,29 +131,11 @@ Using whichever text editor option you prefer, edit the ``step3`` section of ``c
         subset:
           - makeWarp
           - assembleCoadd
+          description: |
+            Tasks that can be run together, but only after the 'step1' and 'step2'
+            subsets.
 
 Make sure to save your changes when you exit the text editor! Also make sure that you did not change any of the indentation in the ``config/MakeWarpAssembleCoadd.yaml`` file, for the lines that remain.
-
-To arrive at the above ``step3`` YAML, you should have deleted exactly 12 lines worth of YAML tasks from the material originally contained in ``config/MakeWarpAssembleCoadd.yaml``. You can check exactly what you changed using the Linux command ``diff``, which prints out the difference between two files. The following shows the expected ``diff`` results for proper editing of the YAML pipeline definition:
-
-.. code-block::
-
-    diff $DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml config/MakeWarpAssembleCoadd.yaml 
-    116,127d115
-    <       - detection
-    <       - mergeDetections
-    <       - deblend
-    <       - measure
-    <       - mergeMeasurements
-    <       - forcedPhotCoadd
-    <       - transformObjectTable
-    <       - writeObjectTable
-    <       - consolidateObjectTable
-    <       - healSparsePropertyMaps
-    <       - selectGoodSeeingVisits
-    <       - templateGen
-
-The lines starting with ``<`` symbols indicate lines that were deleted from ``config/MakeWarpAssembleCoadd.yaml``. Now you're ready to start running some ``pipetask`` commands at the terminal.
 
 Step 3. Show your pipeline and its configurations
 =================================================
