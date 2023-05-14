@@ -91,30 +91,30 @@ Now make your local copy of the full DP0.2 pipeline definition YAML:
     pipetask build -p $DRP_PIPE_DIR/pipelines/LSSTCam-imSim/DRP-test-med-1.yaml \
     --show pipeline > pipelines/MakeWarpAssembleCoadd.yaml
 
-As mentioned in notebook `tutorial 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_, this can be viewed from within the Rubin Science Platform (RSP) at ``$DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml``. There are multiple ways to view an `ASCII <https://en.wikipedia.org/wiki/ASCII>`_ (plain text) file such as ``DRP.yaml`` from a Linux terminal. Let's use a program called `head <https://en.wikipedia.org/wiki/Head_(Unix)>`_.
+Now let's take a look at your newly created ``pipelines/MakeWarpAssembleCoadd.yaml`` pipeline definition file. There are multiple ways to view an `ASCII <https://en.wikipedia.org/wiki/ASCII>`_ (plain text) file such as ``pipelines/MakeWarpAssembleCoadd.yaml`` from a Linux terminal. Let's use a program called `head <https://en.wikipedia.org/wiki/Head_(Unix)>`_.
 
 
 .. code-block::
 
-    head -127 $DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml |tail -16
+    head -3148 pipelines/MakeWarpAssembleCoadd.yaml  |tail -16
       step3:
         subset:
-          - makeWarp
-          - assembleCoadd
-          - detection
-          - mergeDetections
-          - deblend
-          - measure
-          - mergeMeasurements
-          - forcedPhotCoadd
-          - transformObjectTable
-          - writeObjectTable
-          - consolidateObjectTable
-          - healSparsePropertyMaps
-          - selectGoodSeeingVisits
-          - templateGen
+            - writeObjectTable
+            - forcedPhotCoadd
+            - templateGen
+            - measure
+            - healSparsePropertyMaps
+            - mergeMeasurements
+            - consolidateObjectTable
+            - mergeDetections
+            - makeWarp
+            - deblend
+            - detection
+            - assembleCoadd
+            - selectGoodSeeingVisits
+            - transformObjectTable
 
-The specific arguments to ``head`` and ``tail`` here are used to only show the relevant (of > 250 total) lines of the full YAML file. Reading through the entire ``$DRP_PIPE_DIR/ingredients/LSSTCam-imSim/DRP.yaml`` is left as an optional exercise for the learner.
+The specific arguments to ``head`` and ``tail`` here are used to only show the relevant lines of the full YAML file. Reading through the entirety of ``pipelines/MakeWarpAssembleCoadd.yaml`` is left as an optional exercise for the learner.
 
 2.2. Edit the YAML pipeline definition for making custom coadds
 
