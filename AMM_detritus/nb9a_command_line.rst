@@ -443,17 +443,16 @@ Now you have a directory called ``logs`` into which you can save the pipeline ou
 
 .. code-block::
 
-    LOGFILE=$LOGDIR/makeWarpAssembleCoadd.log; \
+    LOGFILE=$LOGDIR/makeWarpAssembleCoadd-logfile.log; \
     date | tee $LOGFILE; \
-    pipetask --long-log run --register-dataset-types \
+    pipetask --long-log --log-file $LOGFILE run --register-dataset-types \
     -b dp02 \
     -i 2.2i/runs/DP0.2 \
     -o u/$USER/custom_coadd_window1_cl00 \
     -p pipelines/MakeWarpAssembleCoadd.yaml#step3 \
     -c makeWarp:doApplyFinalizedPsf=False \
     -c makeWarp:connections.visitSummary="visitSummary" \
-    -d "tract = 4431 AND patch = 17 AND visit in (919515,924057,924085,924086,929477,930353) AND skymap = 'DC2'" \
-    2>&1 | tee -a $LOGFILE; \
+    -d "tract = 4431 AND patch = 17 AND visit in (919515,924057,924085,924086,929477,930353) AND skymap = 'DC2'"; \
     date | tee -a $LOGFILE
     
 It may be desirable to save this shell script to a file and then launch the shell script, rather than attempting to copy all of this into the terminal prompt at once. Call the shell script ``dp02_custom_coadd_1patch.sh``. This ``dp02_custom_coadd_1patch.sh`` script takes 30-35 minutes to run from start to finish. Here's what the full set of printouts looks like for a successful custom coadd processing:
