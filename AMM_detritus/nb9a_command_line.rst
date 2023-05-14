@@ -441,7 +441,7 @@ As you might guess, the custom coadd processing is run via the ``pipetask run`` 
     $ export LOGDIR=logs
     $ mkdir $LOGDIR
     
-Now you have a directory called ``logs`` into which you can save the pipeline outputs printed when creating your custom coadds. Send the logging printouts both to the terminal and to the log file using the Linux ``tee`` command. Also, print out the processing's start time at the very beginning and the time of completion at the very end, in both cases using the ``Linux`` ``date`` command. This will keep a record of how long your custom coadd processing took end-to-end. Putting this all together, the final commands to generate your custom coadds are:
+Now you have a directory called ``logs`` into which you can save the pipeline outputs printed when creating your custom coadds. Also, print out the processing's start time at the very beginning and the time of completion at the very end, in both cases using the ``Linux`` ``date`` command. This will keep a record of how long your custom coadd processing took end-to-end.  Send the ``date`` printouts both to the terminal and to the log file using the Linux ``tee`` command. Putting this all together, the final commands to generate your custom coadds are:
 
 .. code-block::
 
