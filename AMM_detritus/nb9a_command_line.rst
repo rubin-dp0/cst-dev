@@ -704,7 +704,7 @@ The last line (before the timestamp printout) says "Executed 7 quanta successful
 Optional exercises for the learner
 ==========================================
 
-* Try running further downstream processing steps applied to your custom coadds, such as source detection run on the custom ``deepCoadd`` products.
+* Try applying further downstream processing steps to your custom coadds, such as source detection run on the custom ``deepCoadd`` products.
 
 * Try modifying other configuration parameters for the ``makeWarp`` and/or ``assembleCoadd`` tasks via the ``pipetask`` ``-c`` argument syntax.
 
