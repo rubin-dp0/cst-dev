@@ -273,7 +273,7 @@ Notice that the printed configuration parameter value is indeed ``False`` i.e., 
 Step 4. Explore and visualize the ``QuantumGraph``
 ==================================================
 
-Before actually deploying the custom coaddition, let's take some time to understand the ``QuantumGraph`` of the processing to be run. The ``QuantumGraph`` is `a tool <https://pipelines.lsst.io/py-api/lsst.pipe.base.QuantumGraph.html#lsst.pipe.base.QuantumGraph>`_ used by the LSST Science Pipelines to break a large processing into relatively "bite-sized" ``quanta`` and arrange these quanta into a sequence such that all inputs needed by a given ``quantum`` are available for the execution of that ``quantum``. In the present case, you will not be doing an especially large processing, but for production deployments it makes sense to inspect and validate the ``QuantumGraph`` before proceeding straight to full-scale processing launch.
+Before actually deploying the custom coaddition, let's take some time to understand the ``QuantumGraph`` of the processing to be run. The ``QuantumGraph`` is `a tool <https://pipelines.lsst.io/py-api/lsst.pipe.base.QuantumGraph.html#lsst.pipe.base.QuantumGraph>`_ used by the LSST Science Pipelines to break a large processing into relatively "bite-sized" ``quanta`` and arrange these quanta into a sequence such that all inputs needed by a given quantum are available for the execution of that quantum. In the present case, you will not be doing an especially large processing, but for production deployments it makes sense to inspect and validate the ``QuantumGraph`` before proceeding straight to full-scale processing launch.
 
 So far, you've seen ``pipetask build`` and ``pipetask run``. For the ``QuantumGraph``, you'll use another ``pipetask`` variant, ``pipetask qgraph``. ``pipetask qgraph`` determines the full list of ``quanta`` that your processing will entail, so at this stage it's important to bring in the query constraints that specify what subset of DP0.2 will be analyzed. This information is already available from `notebook tutorial 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_. In detail, you want to make a coadd only for ``patch=4431``, ``tract=17`` of the ``DC2`` ``skyMap``, and only using a particular set of 6 input exposures drawn from a desired temporal interval (``visit`` = 919515, 924057, 924085, 924086, 929477, 930353). `Tutorial notebook 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_ also provides a translation of these constraints into `Butler query syntax <https://pipelines.lsst.io/modules/lsst.daf.butler/queries.html>`_ as:
 
@@ -306,7 +306,7 @@ Be aware that this takes approximately 15 minutes to run. Note a few things abou
 
 * The same custom pipeline as always is specified, ``-p pipelines/MakeWarpAssembleCoadd.yaml#step3 \``.
 
-* ``-c`` is used twice, to override the default configuration parameter settings for both ``doApplyFinalizedPsf=False`` and ``connections.visitSummary``.
+* ``-c`` is used twice, to override the default configuration parameter settings for both ``doApplyFinalizedPsf`` and ``connections.visitSummary``.
 
 * The query string has speen specified via the ``-d`` argument of ``pipetask``. Including this query constraint is **really important** -- without it, Butler and ``pipetask`` might try to figure out the (huge) list of ``quanta`` for custom coaddition of the entire DP0.2 data set.
 
@@ -409,7 +409,7 @@ Below is the full output of running the above ``pipetask qgraph`` command:
           DatasetType('deepCoadd_inputMap', {band, skymap, tract, patch}, HealSparseMap): [DataId({band: 'i', skymap: 'DC2', tract: 4431, patch: 17})]
           DatasetType('assembleCoadd_metadata', {band, skymap, tract, patch}, PropertySet): [DataId({band: 'i', skymap: 'DC2', tract: 4431, patch: 17})]
  
-As expected, there are 7 quanta (lines starting with ``Quantum N``), where ``N`` first runs from 0-5 (inclusive) for ``makeWarp`` and then there's another ``N`` = 0 ``quantum`` for ``assembleCoadd``.
+As expected, there are 7 quanta (lines starting with ``Quantum N``), where ``N`` first runs from 0-5 (inclusive) for ``makeWarp`` and then there's another ``N`` = 0 quantum for ``assembleCoadd``.
 
 4.2 Visualizing the ``QuantumGraph``
 
