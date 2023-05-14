@@ -84,7 +84,7 @@ Ensure that you're in the working directory on RSP that you've chosen to be the 
 
     mkdir pipelines
 
-Now make your local copy of the full DP0.2 pipeline definition YAML:
+Now make yourself a local copy of the full DP0.2 pipeline definition YAML:
 
 .. code-block::
 
@@ -117,7 +117,7 @@ Now let's take a look at your newly created ``pipelines/MakeWarpAssembleCoadd.ya
               Tasks that can be run together, but only after the 'step1' and 'step2'
               subsets.
 
-The specific arguments to ``head`` and ``tail`` here are used to only show the relevant lines of the full YAML file. Reading through the entirety of ``pipelines/MakeWarpAssembleCoadd.yaml`` is left as an optional exercise for the learner.
+The specific arguments to ``head`` and ``tail`` here are used to only show the relevant lines of the full YAML file. Reading through other sections of ``pipelines/MakeWarpAssembleCoadd.yaml`` is left as an optional exercise for the learner.
 
 2.2. Edit the YAML pipeline definition for making custom coadds
     
@@ -144,7 +144,7 @@ Step 3. Show your pipeline and its configurations
 
 .. probably want to change where this appears relative to other items, figure out later
 
-Some of the ``pipetask`` commands later in this tutorial require you to specify an output collection where your new coadds will eventually be written to. As described in the notebook version of `tutorial 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_, you want to name your output collection as something like ``u/<Your User Name>/<Collection Identifier>``. As an concrete example, throughout the rest of this tutorial ``u/$USER/custom_coadd_window1_cl00`` is used as the collection name.
+Some of the ``pipetask`` commands later in this tutorial require you to specify an output collection where your new coadds will eventually be written to. As described in the notebook version of `tutorial 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_, you want to name your output collection as something like ``u/<Your User Name>/<Collection Identifier>``. As an concrete example, throughout the rest of this tutorial ``u/$USER/custom_coadd_window1_cl00`` is used as the collection name (``$USER`` is an environment variable that stores your user name.
 
 3.2 Build your custom-defined pipeline
 
