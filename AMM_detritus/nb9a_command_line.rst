@@ -205,7 +205,7 @@ The ``-p`` parameter of ``pipetask`` is short for ``--pipeline`` and it is criti
           This subset is considered a workaround for missing middleware and task
           functionality.  It may be removed in the future.
 
-``pipetask --help`` provides a bunch of documentation about ``pipetask``.
+``pipetask --help`` provides documentation about ``pipetask``, if you are (optionally) interested in learning more about ``pipetask`` and its command line options.
 
 3.3 Customize and inspect the coaddition configurations
 
