@@ -148,7 +148,7 @@ Step 3. Show your pipeline and its configurations
 
 .. probably want to change where this appears relative to other items, figure out later
 
-Some of the ``pipetask`` commands later in this tutorial require you to specify an output collection where your new coadds will eventually be written to. As described in the notebook version of `tutorial 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_, you want to name your output collection as something like ``u/<Your User Name>/<Collection Identifier>``. As an concrete example, throughout the rest of this tutorial ``u/$USER/custom_coadd_window1_cl00`` is used as the collection name (``$USER`` is a Linux environment variable that stores your RSP user name).
+Some of the ``pipetask`` commands later in this tutorial require you to specify an output collection where your new coadds will eventually be written to. As described in the notebook version of `tutorial 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_, you want to name your output collection as something like ``u/<Your User Name>/<Collection Identifier>``. As a concrete example, throughout the rest of this tutorial ``u/$USER/custom_coadd_window1_cl00`` is used as the collection name (``$USER`` is a Linux environment variable that stores your RSP user name).
 
 3.2 Build your custom-defined pipeline
 
@@ -222,7 +222,7 @@ As mentioned in `tutorial notebook 9a <https://github.com/rubin-dp0/tutorial-not
     
 Notice that the ``-p`` parameter passed to ``pipetask`` has remained the same. But in order for ``pipetask run`` to operate, it also needs to know what Butler repository it's dealing with. That's why the ``-b dp02`` argument has been added. ``dp02`` is an alias that points to the `S3 <https://en.wikipedia.org/wiki/Amazon_S3>`_ location of the DP0.2 Butler repository.
 
-The final line merits further explanation. ``--show config`` tells the LSST pipelines not to actually run the pipeline, but rather to only show the configuration parameters, so that you can understand all the detailed choices being made by your processing, if desired. The last line would be valid as simply ``--show config``. However, this would print out every single configuration parameter and its description -- more than 1300 lines of printouts in total! Appending ``=<Task>::<Parameter>`` to ``--show config`` specifies exactly which parameter you want to be shown. In this case, it's known from `tutorial notebook 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_ that you want to adjust the ``doApplyFinalizedPsf`` parameter of the ``makeWarp`` ``Task``, hence why ``makeWarp::doApplyFinalizedPsf`` is appended to ``--show config``.
+The final line merits further explanation. ``--show config`` tells the LSST pipelines not to actually run the pipeline, but rather to only show the configuration parameters, so that you can understand all the detailed choices being made by your processing, if desired. The last line would be valid as simply ``--show config``. However, this would print out every single configuration parameter and its description -- more than 1300 lines of printouts in total! Appending ``=<Task>::<Parameter>`` to ``--show config`` specifies exactly which parameter you want to be shown. In this case, it's known from `tutorial notebook 9a <https://github.com/rubin-dp0/tutorial-notebooks/blob/main/09_Custom_Coadds/09a_Custom_Coadd.ipynb>`_ that you want to adjust the ``doApplyFinalizedPsf`` parameter of the ``makeWarp`` Task, hence why ``makeWarp::doApplyFinalizedPsf`` is appended to ``--show config``.
 
 Now let's look at what happens when you run the above ``pipetask command``:
 
@@ -248,7 +248,7 @@ Ignore the lines about "No quantum graph" and "NOIGNORECASE" -- for the present 
     -c makeWarp:doApplyFinalizedPsf=False \
     --show config=makeWarp::doApplyFinalizedPsf
     
-The penultimate line (``-c makeWarp:doApplyFinalizedPsf=False \``) is newly added. The ``-c`` parameter of ``pipetask run`` (note the lower case ``c``) can be used to specify a desired value of a given parameter, with argument syntax of ``<Task>:<Parameter>=<Value>``. In this case, the ``Task`` is ``makeWarp``, the parameter is ``doApplyFinalizedPsf``, and the desired value is ``False``. Now find out if you succeeded in changing the configuration, by looking at the printouts generated from running the above command:
+The penultimate line (``-c makeWarp:doApplyFinalizedPsf=False \``) is newly added. The ``-c`` parameter of ``pipetask run`` (note the lower case ``c``) can be used to specify a desired value of a given parameter, with argument syntax of ``<Task>:<Parameter>=<Value>``. In this case, the Task is ``makeWarp``, the parameter is ``doApplyFinalizedPsf``, and the desired value is ``False``. Now find out if you succeeded in changing the configuration, by looking at the printouts generated from running the above command:
 
 .. code-block::
 
@@ -264,7 +264,7 @@ The penultimate line (``-c makeWarp:doApplyFinalizedPsf=False \``) is newly adde
 
     No quantum graph generated or pipeline executed. The --show option was given and all options were processed.
     
-Notice that the printed configuration parameter value is indeed ``False`` i.e., not the default value...great! The second configuration parameter that you need to change can be passed to ``pipetask run`` in the exact same way, by simply adding a second ``-c`` argument whose line in the full shell command would look like
+Notice that the printed configuration parameter value is indeed ``False`` i.e., not the default value...great! The second configuration parameter that you need to change can be passed to ``pipetask run`` in exactly the same way, by simply adding a second ``-c`` argument whose line in the full shell command looks like:
 
 .. code-block::
 
@@ -429,7 +429,7 @@ This command executes very fast (roughly 5 seconds), again because it is not per
   :width: 1500
   :alt: QuantumGraph diagram for custom coaddition
 
-Light gray rectangles with rounded corners represent data, whereas darker gray rectangles with sharp corners represent pipeline ``Tasks``. The arrows connecting the data and ``Tasks`` illustrate the data processing flow. The data processing starts at the top, with the ``calexp`` calibrated single-exposure images. The ``makeWarp`` ``Task`` is applied to generate reprojected "warp" images from the various input ``calexp`` images, and finally the ``assembleCoadd`` ``Task`` combines the warps into ``deepCoadd`` coadded products (light gray boxes along the bottom row). 
+Light gray rectangles with rounded corners represent data, whereas darker gray rectangles with sharp corners represent pipeline ``Tasks``. The arrows connecting the data and ``Tasks`` illustrate the data processing flow. The data processing starts at the top, with the ``calexp`` calibrated single-exposure images. The ``makeWarp`` Task is applied to generate reprojected "warp" images from the various input ``calexp`` images, and finally the ``assembleCoadd`` Task combines the warps into ``deepCoadd`` coadded products (light gray boxes along the bottom row). 
 
 Step 5. Deploy your custom coadd processing
 ===========================================
