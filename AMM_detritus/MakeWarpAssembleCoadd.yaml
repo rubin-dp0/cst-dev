@@ -1,0 +1,3217 @@
+description: DRP specialized for the ImSim-DC2 test-med-1 dataset
+instrument: lsst.obs.lsst.LsstCamImSim
+parameters:
+  band: i
+  model: cModelFlux
+tasks:
+  isr:
+    class: lsst.ip.isr.IsrTask
+    config:
+    - connections.newBFKernel: bfk
+      doDefect: false
+      doBrighterFatter: true
+  characterizeImage:
+    class: lsst.pipe.tasks.characterizeImage.CharacterizeImageTask
+    config:
+    - python: |
+        import lsst.meas.extensions.piff.piffPsfDeterminer
+        config.measurePsf.psfDeterminer = "piff"
+  calibrate:
+    class: lsst.pipe.tasks.calibrate.CalibrateTask
+    config:
+    - python: 'config.astromRefObjLoader.filterMap = {band: ''lsst_%s_smeared'' %
+        (band) for band in ''ugrizy''}; config.photoRefObjLoader.filterMap = {band:
+        ''lsst_%s_smeared'' % (band) for band in ''ugrizy''};
+
+        '
+      connections.astromRefCat: cal_ref_cat_2_2
+      connections.photoRefCat: cal_ref_cat_2_2
+  writeSourceTable:
+    class: lsst.pipe.tasks.postprocess.WriteSourceTableTask
+  transformSourceTable:
+    class: lsst.pipe.tasks.postprocess.TransformSourceTableTask
+  consolidateSourceTable:
+    class: lsst.pipe.tasks.postprocess.ConsolidateSourceTableTask
+  consolidateVisitSummary:
+    class: lsst.pipe.tasks.postprocess.ConsolidateVisitSummaryTask
+  isolatedStarAssociation:
+    class: lsst.pipe.tasks.isolatedStarAssociation.IsolatedStarAssociationTask
+  finalizeCharacterization:
+    class: lsst.pipe.tasks.finalizeCharacterization.FinalizeCharacterizationTask
+  makeCcdVisitTable:
+    class: lsst.pipe.tasks.postprocess.MakeCcdVisitTableTask
+  makeVisitTable:
+    class: lsst.pipe.tasks.postprocess.MakeVisitTableTask
+  makeWarp:
+    class: lsst.pipe.tasks.makeWarp.MakeWarpTask
+    config:
+    - makePsfMatched: true
+  assembleCoadd:
+    class: lsst.pipe.tasks.assembleCoadd.CompareWarpAssembleCoaddTask
+    config:
+    - doInputMap: true
+  healSparsePropertyMaps:
+    class: lsst.pipe.tasks.healSparseMapping.HealSparsePropertyMapTask
+  consolidateHealSparsePropertyMaps:
+    class: lsst.pipe.tasks.healSparseMapping.ConsolidateHealSparsePropertyMapTask
+  detection:
+    class: lsst.pipe.tasks.multiBand.DetectCoaddSourcesTask
+  mergeDetections:
+    class: lsst.pipe.tasks.mergeDetections.MergeDetectionsTask
+  deblend:
+    class: lsst.pipe.tasks.deblendCoaddSourcesPipeline.DeblendCoaddSourcesMultiTask
+  measure:
+    class: lsst.pipe.tasks.multiBand.MeasureMergedCoaddSourcesTask
+    config:
+    - python: 'config.match.refObjLoader.filterMap = {band: ''lsst_%s_smeared'' %
+        (band) for band in ''ugrizy''};
+
+        '
+      connections.refCat: cal_ref_cat_2_2
+  mergeMeasurements:
+    class: lsst.pipe.tasks.mergeMeasurements.MergeMeasurementsTask
+  writeObjectTable:
+    class: lsst.pipe.tasks.postprocess.WriteObjectTableTask
+  transformObjectTable:
+    class: lsst.pipe.tasks.postprocess.TransformObjectCatalogTask
+  consolidateObjectTable:
+    class: lsst.pipe.tasks.postprocess.ConsolidateObjectTableTask
+  forcedPhotCcd:
+    class: lsst.meas.base.forcedPhotCcd.ForcedPhotCcdTask
+  forcedPhotCoadd:
+    class: lsst.meas.base.forcedPhotCoadd.ForcedPhotCoaddTask
+  selectGoodSeeingVisits:
+    class: lsst.pipe.tasks.selectImages.BestSeeingQuantileSelectVisitsTask
+    config:
+    - connections.goodVisits: goodSeeingVisits
+  templateGen:
+    class: lsst.pipe.tasks.assembleCoadd.CompareWarpAssembleCoaddTask
+    config:
+    - doSelectVisits: true
+      assembleStaticSkyModel.doSelectVisits: true
+      connections.selectedVisits: goodSeeingVisits
+      connections.outputCoaddName: goodSeeing
+      connections.coaddExposure: goodSeeingCoadd
+  getTemplate:
+    class: lsst.ip.diffim.getTemplate.GetTemplateTask
+    config:
+    - connections.coaddName: goodSeeing
+      connections.coaddExposures: goodSeeingCoadd
+      connections.template: goodSeeingDiff_templateExp
+  subtractImages:
+    class: lsst.ip.diffim.subtractImages.AlardLuptonSubtractTask
+    config:
+    - connections.coaddName: goodSeeing
+      connections.template: goodSeeingDiff_templateExp
+      connections.difference: goodSeeingDiff_differenceTempExp
+      connections.matchedTemplate: goodSeeingDiff_matchedExp
+  detectAndMeasureDiaSources:
+    class: lsst.ip.diffim.detectAndMeasure.DetectAndMeasureTask
+    config:
+    - connections.coaddName: goodSeeing
+      connections.matchedTemplate: goodSeeingDiff_matchedExp
+      connections.difference: goodSeeingDiff_differenceTempExp
+      connections.subtractedMeasuredExposure: goodSeeingDiff_differenceExp
+  transformDiaSourceCat:
+    class: lsst.ap.association.TransformDiaSourceCatalogTask
+    config:
+    - doPackFlags: false
+      connections.coaddName: goodSeeing
+      connections.diaSourceSchema: goodSeeingDiff_diaSrc_schema
+      connections.diaSourceCat: goodSeeingDiff_diaSrc
+      connections.diffIm: goodSeeingDiff_differenceExp
+      connections.diaSourceTable: goodSeeingDiff_diaSrcTable
+  consolidateDiaSourceTable:
+    class: lsst.pipe.tasks.postprocess.ConsolidateSourceTableTask
+    config:
+    - connections.inputCatalogs: goodSeeingDiff_diaSrcTable
+      connections.outputCatalog: diaSourceTable
+  drpAssociation:
+    class: lsst.pipe.tasks.drpAssociationPipe.DrpAssociationPipeTask
+    config:
+    - connections.coaddName: goodSeeing
+      connections.diaSourceTables: goodSeeingDiff_diaSrcTable
+      connections.assocDiaSourceTable: goodSeeingDiff_assocDiaSrcTable
+      connections.diaObjectTable: goodSeeingDiff_diaObjTable
+  drpDiaCalculation:
+    class: lsst.pipe.tasks.drpDiaCalculationPipe.DrpDiaCalculationPipeTask
+    config:
+    - connections.coaddName: goodSeeing
+      connections.assocDiaSourceTable: goodSeeingDiff_assocDiaSrcTable
+      connections.diaObjectTable: goodSeeingDiff_diaObjTable
+      connections.fullDiaObjectTable: goodSeeingDiff_fullDiaObjTable
+  consolidateAssocDiaSourceTable:
+    class: lsst.pipe.tasks.postprocess.ConsolidateTractTask
+    config:
+    - connections.inputCatalogs: goodSeeingDiff_assocDiaSrcTable
+      connections.outputCatalog: diaSourceTable_tract
+  consolidateFullDiaObjectTable:
+    class: lsst.pipe.tasks.postprocess.ConsolidateTractTask
+    config:
+    - connections.inputCatalogs: goodSeeingDiff_fullDiaObjTable
+      connections.outputCatalog: diaObjectTable_tract
+  forcedPhotDiffim:
+    class: lsst.meas.base.ForcedPhotCcdTask
+    config:
+    - connections.measCat: forced_diff
+      connections.outputSchema: forced_diff_schema
+      connections.exposure: goodSeeingDiff_differenceExp
+  writeForcedSourceTable:
+    class: lsst.pipe.tasks.postprocess.WriteForcedSourceTableTask
+  transformForcedSourceTable:
+    class: lsst.pipe.tasks.postprocess.TransformForcedSourceTableTask
+  consolidateForcedSourceTable:
+    class: lsst.pipe.tasks.postprocess.ConsolidateTractTask
+    config:
+    - connections.inputCatalogs: forcedSourceTable
+      connections.outputCatalog: forcedSourceTable_tract
+  forcedPhotCcdOnDiaObjects:
+    class: lsst.meas.base.ForcedPhotCcdFromDataFrameTask
+  forcedPhotDiffOnDiaObjects:
+    class: lsst.meas.base.ForcedPhotCcdFromDataFrameTask
+    config:
+    - connections.measCat: forced_diff_diaObject
+      connections.outputSchema: forced_diff_diaObject_schema
+      connections.exposure: goodSeeingDiff_differenceExp
+  writeForcedSourceOnDiaObjectTable:
+    class: lsst.pipe.tasks.postprocess.WriteForcedSourceTableTask
+    config:
+    - key: diaObjectId
+      connections.inputCatalogDiff: forced_diff_diaObject
+      connections.inputCatalog: forced_src_diaObject
+      connections.outputCatalog: mergedForcedSourceOnDiaObject
+  transformForcedSourceOnDiaObjectTable:
+    class: lsst.pipe.tasks.postprocess.TransformForcedSourceTableTask
+    config:
+    - referenceColumns: []
+      keyRef: diaObjectId
+      key: forcedSourceOnDiaObjectId
+      connections.inputCatalogs: mergedForcedSourceOnDiaObject
+      connections.outputCatalog: forcedSourceOnDiaObjectTable
+      connections.referenceCatalog: goodSeeingDiff_fullDiaObjTable
+  consolidateForcedSourceOnDiaObjectTable:
+    class: lsst.pipe.tasks.postprocess.ConsolidateTractTask
+    config:
+    - connections.inputCatalogs: forcedSourceOnDiaObjectTable
+      connections.outputCatalog: forcedSourceOnDiaObjectTable_tract
+  matchCatalogsPatch:
+    class: lsst.faro.preparation.PatchMatchedPreparationTask
+  matchCatalogsTract:
+    class: lsst.faro.preparation.TractMatchedPreparationTask
+  matchCatalogsTractMag17to21p5:
+    class: lsst.faro.preparation.TractMatchedPreparationTask
+    config:
+    - python: 'config.connections.outputCatalog = ''matchedCatalogTractMag17to21p5''
+
+        '
+      snrMin: 10
+      snrMax: 50000
+      brightMagCut: 17.0
+      faintMagCut: 21.5
+      selectExtended: false
+  matchCatalogsTractStarsSNR5to80:
+    class: lsst.faro.preparation.TractMatchedPreparationTask
+    config:
+    - python: 'config.connections.outputCatalog = ''matchedCatalogTractStarsSNR5to80''
+
+        '
+      snrMin: 5
+      snrMax: 80
+      selectExtended: false
+  matchCatalogsTractGxsSNR5to80:
+    class: lsst.faro.preparation.TractMatchedPreparationTask
+    config:
+    - python: 'config.connections.outputCatalog = ''matchedCatalogTractGxsSNR5to80''
+
+        '
+      snrMin: 5
+      snrMax: 80
+      selectExtended: true
+  PA1:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        from lsst.faro.measurement import PA1Task
+        config.measure.retarget(PA1Task)
+      connections.package: validate_drp
+      connections.metric: PA1
+  PF1_design:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        from lsst.faro.measurement import PF1Task
+        config.measure.retarget(PF1Task)
+        config.measure.threshPA2 = 15.0
+      connections.package: validate_drp
+      connections.metric: PF1_design_gri
+  AM1:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        config.connections.matchedCatalog = 'matchedCatalogTractMag17to21p5'
+        from lsst.faro.measurement import AMxTask
+        config.measure.retarget(AMxTask)
+        config.measure.annulus_r = 5.0
+      connections.package: validate_drp
+      connections.metric: AM1
+  AM2:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        config.connections.matchedCatalog = 'matchedCatalogTractMag17to21p5'
+        from lsst.faro.measurement import AMxTask
+        config.measure.retarget(AMxTask)
+        config.measure.annulus_r = 20.0
+      connections.package: validate_drp
+      connections.metric: AM2
+  AM3:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        config.connections.matchedCatalog = 'matchedCatalogTractMag17to21p5'
+        from lsst.faro.measurement import AMxTask
+        config.measure.retarget(AMxTask)
+        config.measure.annulus_r = 200.0
+      connections.package: validate_drp
+      connections.metric: AM3
+  AD1_design:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        config.connections.matchedCatalog = 'matchedCatalogTractMag17to21p5'
+        from lsst.faro.measurement import ADxTask
+        config.measure.retarget(ADxTask)
+        config.measure.annulus_r = 5.0
+        config.measure.threshAD = 20.0
+        config.measure.threshAF = 10.0
+      connections.package: validate_drp
+      connections.metric: AD1_design
+  AD2_design:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        config.connections.matchedCatalog = 'matchedCatalogTractMag17to21p5'
+        from lsst.faro.measurement import ADxTask
+        config.measure.retarget(ADxTask)
+        config.measure.annulus_r = 20.0
+        config.measure.threshAD = 20.0
+        config.measure.threshAF = 10.0
+      connections.package: validate_drp
+      connections.metric: AD2_design
+  AD3_design:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        config.connections.matchedCatalog = 'matchedCatalogTractMag17to21p5'
+        from lsst.faro.measurement import ADxTask
+        config.measure.retarget(ADxTask)
+        config.measure.annulus_r = 200.0
+        config.measure.threshAD = 30.0
+        config.measure.threshAF = 10.0
+      connections.package: validate_drp
+      connections.metric: AD3_design
+  AF1_design:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        config.connections.matchedCatalog = 'matchedCatalogTractMag17to21p5'
+        from lsst.faro.measurement import AFxTask
+        config.measure.retarget(AFxTask)
+        config.measure.annulus_r = 5.0
+        config.measure.threshAD = 20.0
+        config.measure.threshAF = 10.0
+      connections.package: validate_drp
+      connections.metric: AF1_design
+  AF2_design:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        config.connections.matchedCatalog = 'matchedCatalogTractMag17to21p5'
+        from lsst.faro.measurement import AFxTask
+        config.measure.retarget(AFxTask)
+        config.measure.annulus_r = 20.0
+        config.measure.threshAD = 20.0
+        config.measure.threshAF = 10.0
+      connections.package: validate_drp
+      connections.metric: AF2_design
+  AF3_design:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        config.connections.matchedCatalog = 'matchedCatalogTractMag17to21p5'
+        from lsst.faro.measurement import AFxTask
+        config.measure.retarget(AFxTask)
+        config.measure.annulus_r = 200.0
+        config.measure.threshAD = 30.0
+        config.measure.threshAF = 10.0
+      connections.package: validate_drp
+      connections.metric: AF3_design
+  modelPhotRepGal1:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        config.connections.matchedCatalog = 'matchedCatalogTractGxsSNR5to80'
+        from lsst.faro.measurement import ModelPhotRepTask
+        config.measure.retarget(ModelPhotRepTask)
+        config.measure.index = 1
+        config.measure.selectExtended = True
+        config.measure.selectSnrMin = 5
+        config.measure.selectSnrMax = 10
+      connections.package: validate_drp
+      connections.metric: modelPhotRepGal1
+  modelPhotRepGal2:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        config.connections.matchedCatalog = 'matchedCatalogTractGxsSNR5to80'
+        from lsst.faro.measurement import ModelPhotRepTask
+        config.measure.retarget(ModelPhotRepTask)
+        config.measure.index = 2
+        config.measure.selectExtended = True
+        config.measure.selectSnrMin = 10
+        config.measure.selectSnrMax = 20
+      connections.package: validate_drp
+      connections.metric: modelPhotRepGal2
+  modelPhotRepGal3:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        config.connections.matchedCatalog = 'matchedCatalogTractGxsSNR5to80'
+        from lsst.faro.measurement import ModelPhotRepTask
+        config.measure.retarget(ModelPhotRepTask)
+        config.measure.index = 3
+        config.measure.selectExtended = True
+        config.measure.selectSnrMin = 20
+        config.measure.selectSnrMax = 40
+      connections.package: validate_drp
+      connections.metric: modelPhotRepGal3
+  modelPhotRepGal4:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        config.connections.matchedCatalog = 'matchedCatalogTractGxsSNR5to80'
+        from lsst.faro.measurement import ModelPhotRepTask
+        config.measure.retarget(ModelPhotRepTask)
+        config.measure.index = 4
+        config.measure.selectExtended = True
+        config.measure.selectSnrMin = 40
+        config.measure.selectSnrMax = 80
+      connections.package: validate_drp
+      connections.metric: modelPhotRepGal4
+  modelPhotRepStar1:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        config.connections.matchedCatalog = 'matchedCatalogTractStarsSNR5to80'
+        from lsst.faro.measurement import ModelPhotRepTask
+        config.measure.retarget(ModelPhotRepTask)
+        config.measure.index = 1
+        config.measure.selectExtended = False
+        config.measure.selectSnrMin = 5
+        config.measure.selectSnrMax = 10
+      connections.package: validate_drp
+      connections.metric: modelPhotRepStar1
+  modelPhotRepStar2:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        config.connections.matchedCatalog = 'matchedCatalogTractStarsSNR5to80'
+        from lsst.faro.measurement import ModelPhotRepTask
+        config.measure.retarget(ModelPhotRepTask)
+        config.measure.index = 2
+        config.measure.selectExtended = False
+        config.measure.selectSnrMin = 10
+        config.measure.selectSnrMax = 20
+      connections.package: validate_drp
+      connections.metric: modelPhotRepStar2
+  modelPhotRepStar3:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        config.connections.matchedCatalog = 'matchedCatalogTractStarsSNR5to80'
+        from lsst.faro.measurement import ModelPhotRepTask
+        config.measure.retarget(ModelPhotRepTask)
+        config.measure.index = 3
+        config.measure.selectExtended = False
+        config.measure.selectSnrMin = 20
+        config.measure.selectSnrMax = 40
+      connections.package: validate_drp
+      connections.metric: modelPhotRepStar3
+  modelPhotRepStar4:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        config.connections.matchedCatalog = 'matchedCatalogTractStarsSNR5to80'
+        from lsst.faro.measurement import ModelPhotRepTask
+        config.measure.retarget(ModelPhotRepTask)
+        config.measure.index = 4
+        config.measure.selectExtended = False
+        config.measure.selectSnrMin = 40
+        config.measure.selectSnrMax = 80
+      connections.package: validate_drp
+      connections.metric: modelPhotRepStar4
+  psfPhotRepStar1:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        config.connections.matchedCatalog = 'matchedCatalogTractStarsSNR5to80'
+        from lsst.faro.measurement import ModelPhotRepTask
+        config.measure.retarget(ModelPhotRepTask)
+        config.measure.index = 1
+        config.measure.selectExtended = False
+        config.measure.selectSnrMin = 5
+        config.measure.selectSnrMax = 10
+        config.measure.magName = "slot_PsfFlux_mag"
+      connections.package: validate_drp
+      connections.metric: psfPhotRepStar1
+  psfPhotRepStar2:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        config.connections.matchedCatalog = 'matchedCatalogTractStarsSNR5to80'
+        from lsst.faro.measurement import ModelPhotRepTask
+        config.measure.retarget(ModelPhotRepTask)
+        config.measure.index = 2
+        config.measure.selectExtended = False
+        config.measure.selectSnrMin = 10
+        config.measure.selectSnrMax = 20
+        config.measure.magName = "slot_PsfFlux_mag"
+      connections.package: validate_drp
+      connections.metric: psfPhotRepStar2
+  psfPhotRepStar3:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        config.connections.matchedCatalog = 'matchedCatalogTractStarsSNR5to80'
+        from lsst.faro.measurement import ModelPhotRepTask
+        config.measure.retarget(ModelPhotRepTask)
+        config.measure.index = 3
+        config.measure.selectExtended = False
+        config.measure.selectSnrMin = 20
+        config.measure.selectSnrMax = 40
+        config.measure.magName = "slot_PsfFlux_mag"
+      connections.package: validate_drp
+      connections.metric: psfPhotRepStar3
+  psfPhotRepStar4:
+    class: lsst.faro.measurement.TractMatchedMeasurementTask
+    config:
+    - python: |
+        config.connections.matchedCatalog = 'matchedCatalogTractStarsSNR5to80'
+        from lsst.faro.measurement import ModelPhotRepTask
+        config.measure.retarget(ModelPhotRepTask)
+        config.measure.index = 4
+        config.measure.selectExtended = False
+        config.measure.selectSnrMin = 40
+        config.measure.selectSnrMax = 80
+        config.measure.magName = "slot_PsfFlux_mag"
+      connections.package: validate_drp
+      connections.metric: psfPhotRepStar4
+  matchCatalogsPatchMultiBand:
+    class: lsst.faro.preparation.PatchMatchedMultiBandPreparationTask
+    config:
+    - python: |
+        config.connections.outputCatalog = 'matchedCatalogPatchMultiBand'
+        config.doApplyExternalPhotoCalib = False
+        config.useGlobalExternalPhotoCalib = False
+        config.doApplyExternalSkyWcs = False
+        config.useGlobalExternalSkyWcs = False
+      snrMin: 10
+      snrMax: 50000
+      brightMagCut: 17.0
+      faintMagCut: 21.5
+      selectExtended: false
+  AB1:
+    class: lsst.faro.measurement.PatchMatchedMultiBandMeasurementTask
+    config:
+    - python: |
+        config.connections.matchedCatalogMulti = 'matchedCatalogPatchMultiBand'
+        from lsst.faro.measurement.MatchedCatalogMeasurementTasks import AB1Task
+        config.measure.retarget(AB1Task)
+      connections.package: validate_drp
+      connections.metric: AB1
+  nsrcMeasVisit:
+    class: lsst.faro.measurement.VisitMeasurementTask
+    config:
+    - python: |
+        from lsst.faro.base import NumSourcesMergeTask
+        config.measure.retarget(NumSourcesMergeTask)
+      connections.package: info
+      connections.metric: nsrcMeasVisit
+  TE3:
+    class: lsst.faro.measurement.VisitMeasurementTask
+    config:
+    - python: |
+        from lsst.faro.measurement import TExTask
+        config.measure.retarget(TExTask)
+        config.measure.minSep = 0.25
+        config.measure.maxSep = 5.0
+        config.measure.columnPsf = "slot_PsfShape"
+        config.measure.column = "slot_Shape"
+      connections.package: validate_drp
+      connections.metric: TE3
+  TE4:
+    class: lsst.faro.measurement.VisitMeasurementTask
+    config:
+    - python: |
+        from lsst.faro.measurement import TExTask
+        config.measure.retarget(TExTask)
+        config.measure.minSep = 5.0
+        config.measure.maxSep = 20.0
+        config.measure.columnPsf = "slot_PsfShape"
+        config.measure.column = "slot_Shape"
+      connections.package: validate_drp
+      connections.metric: TE4
+  TE1:
+    class: lsst.faro.measurement.TractMeasurementTask
+    config:
+    - python: |
+        from lsst.faro.measurement import TExTask
+        config.measure.retarget(TExTask)
+        config.measure.minSep = 0.25
+        config.measure.maxSep = 1.0
+        config.measure.shearConvention = False
+      connections.package: validate_drp
+      connections.metric: TE1
+  TE2:
+    class: lsst.faro.measurement.TractMeasurementTask
+    config:
+    - python: |
+        from lsst.faro.measurement import TExTask
+        config.measure.retarget(TExTask)
+        config.measure.minSep = 5.0
+        config.measure.maxSep = 20.0
+        config.measure.shearConvention = False
+      connections.package: validate_drp
+      connections.metric: TE2
+  skyObjectMean:
+    class: lsst.faro.measurement.TractTableMeasurementTask
+    config:
+    - python: |
+        from lsst.faro.measurement import FluxStatisticTask
+        import lsst.faro.utils.selectors as selectors
+        config.measure.retarget(FluxStatisticTask)
+        config.measure.columnsBand = {"flux": "ap09Flux"}
+        config.measure.selectorActions.FlagSelector=selectors.FlagSelector
+        config.measure.selectorActions.FlagSelector.selectWhenTrue=["sky_object"]
+        config.measure.selectorActions.PerBandFlagSelector=selectors.PerBandFlagSelector
+        config.measure.selectorActions.PerBandFlagSelector.selectWhenFalse=["pixelFlags_edge"]
+      measure.statistic: MEAN
+      connections.package: pipe_analysis
+      connections.metric: skyObjectMean_ap09Flux
+  skyObjectStd:
+    class: lsst.faro.measurement.TractTableMeasurementTask
+    config:
+    - python: |
+        from lsst.faro.measurement import FluxStatisticTask
+        import lsst.faro.utils.selectors as selectors
+        config.measure.retarget(FluxStatisticTask)
+        config.measure.columnsBand = {"flux": "ap09Flux"}
+        config.measure.selectorActions.FlagSelector=selectors.FlagSelector
+        config.measure.selectorActions.FlagSelector.selectWhenTrue=["sky_object"]
+        config.measure.selectorActions.PerBandFlagSelector=selectors.PerBandFlagSelector
+        config.measure.selectorActions.PerBandFlagSelector.selectWhenFalse=["pixelFlags_edge"]
+      measure.statistic: STDEV
+      connections.package: pipe_analysis
+      connections.metric: skyObjectStd_ap09Flux
+  wPerp:
+    class: lsst.faro.measurement.TractMultiBandMeasurementTask
+    config:
+    - python: |
+        from lsst.faro.measurement import WPerpTask
+        config.measure.retarget(WPerpTask)
+      connections.package: pipe_analysis
+      connections.metric: stellar_locus_width_wPerp
+  matchObjectToTruth:
+    class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
+    config:
+    - python: |
+        # Target settings are likely common to all object tables
+        from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
+        config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
+        config.match_tract_catalog.columns_ref_flux = [
+            'flux_u', 'flux_g', 'flux_r',
+            'flux_i', 'flux_z', 'flux_y',
+        ]
+        config.match_tract_catalog.columns_ref_meas = [
+            'ra', 'dec',
+            'flux_u', 'flux_g', 'flux_r',
+            'flux_i', 'flux_z', 'flux_y',
+        ]
+        config.match_tract_catalog.columns_target_meas = [
+            'x', 'y',
+            'u_cModelFlux', 'g_cModelFlux', 'r_cModelFlux',
+            'i_cModelFlux', 'z_cModelFlux', 'y_cModelFlux',
+        ]
+        config.match_tract_catalog.columns_target_err = [
+            'xErr', 'yErr',
+            'u_cModelFluxErr', 'g_cModelFluxErr', 'r_cModelFluxErr',
+            'i_cModelFluxErr', 'z_cModelFluxErr', 'y_cModelFluxErr',
+        ]
+        config.match_tract_catalog.coord_format.coords_ref_to_convert = {'ra': 'x', 'dec': 'y'}
+        # Might need adjusting for different survey depths
+        config.match_tract_catalog.mag_faintest_ref = 27.0
+        config.match_tract_catalog.columns_ref_copy = ['id']
+        config.match_tract_catalog.columns_target_copy = ['objectId']
+  compareObjectToTruth:
+    class: lsst.pipe.tasks.diff_matched_tract_catalog.DiffMatchedTractCatalogTask
+    config:
+    - python: |
+        from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
+        columns_flux = {}
+        for band in 'ugrizy':
+            columns_flux[band] = MatchedCatalogFluxesConfig(
+                column_ref_flux=f'flux_{band}',
+                columns_target_flux=[f'{band}_cModelFlux',],
+                columns_target_flux_err=[f'{band}_cModelFluxErr',],
+            )
+        config.columns_flux = columns_flux
+      columns_target_coord_err:
+      - xErr
+      - yErr
+      coord_format.coords_ref_to_convert:
+        ra: x
+        dec: y
+  match_red_galaxies:
+    class: lsst.analysis.drp.redGalaxyTruthAssociation.RedGalaxyTruthAssociationTask
+  plot_red_galaxy_gmr_cmodel_residual:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiff
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiff
+      axisActions.yAction.color1_flux1: g_cModelFlux
+      axisActions.yAction.color1_flux2: r_cModelFlux
+      axisActions.yAction.color2_flux1: g_trueFlux
+      axisActions.yAction.color2_flux2: r_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: cmodel_redgals_gmr_residual
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - g_cModel_flag
+      - r_cModel_flag
+      - i_cModel_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
+      axisLabels:
+        x: True i (mag)
+        y: cModel (g-r) - true (g-r) (mmag)
+        mag: True i (mag)
+  plot_red_galaxy_gmr_cmodel_pull:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiffPull
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiffPull
+      axisActions.yAction.color1_flux1: g_cModelFlux
+      axisActions.yAction.color1_flux1_err: g_cModelFluxErr
+      axisActions.yAction.color1_flux2: r_cModelFlux
+      axisActions.yAction.color1_flux2_err: r_cModelFluxErr
+      axisActions.yAction.color2_flux1: g_trueFlux
+      axisActions.yAction.color2_flux2: r_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: cmodel_redgals_gmr_pulls
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - g_cModel_flag
+      - g_cModel_flag
+      - i_cModel_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
+      axisLabels:
+        x: True i (mag)
+        y: cModel (g-r) - true (g-r) / cModel (g-r) err
+        mag: True i (mag)
+  plot_red_galaxy_rmi_cmodel_residual:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiff
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiff
+      axisActions.yAction.color1_flux1: r_cModelFlux
+      axisActions.yAction.color1_flux2: i_cModelFlux
+      axisActions.yAction.color2_flux1: r_trueFlux
+      axisActions.yAction.color2_flux2: i_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: cmodel_redgals_rmi_residual
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - r_cModel_flag
+      - i_cModel_flag
+      - i_cModel_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
+      axisLabels:
+        x: True i (mag)
+        y: cModel (r-i) - true (r-i) (mmag)
+        mag: True i (mag)
+  plot_red_galaxy_rmi_cmodel_pull:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiffPull
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiffPull
+      axisActions.yAction.color1_flux1: r_cModelFlux
+      axisActions.yAction.color1_flux1_err: r_cModelFluxErr
+      axisActions.yAction.color1_flux2: i_cModelFlux
+      axisActions.yAction.color1_flux2_err: i_cModelFluxErr
+      axisActions.yAction.color2_flux1: r_trueFlux
+      axisActions.yAction.color2_flux2: i_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: cmodel_redgals_rmi_pulls
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - r_cModel_flag
+      - r_cModel_flag
+      - i_cModel_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
+      axisLabels:
+        x: True i (mag)
+        y: cModel (r-i) - true (r-i) / cModel (r-i) err
+        mag: True i (mag)
+  plot_red_galaxy_imz_cmodel_residual:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiff
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiff
+      axisActions.yAction.color1_flux1: i_cModelFlux
+      axisActions.yAction.color1_flux2: z_cModelFlux
+      axisActions.yAction.color2_flux1: i_trueFlux
+      axisActions.yAction.color2_flux2: z_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: cmodel_redgals_imz_residual
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - i_cModel_flag
+      - z_cModel_flag
+      - i_cModel_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
+      axisLabels:
+        x: True i (mag)
+        y: cModel (i-z) - true (i-z) (mmag)
+        mag: True i (mag)
+  plot_red_galaxy_imz_cmodel_pull:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiffPull
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiffPull
+      axisActions.yAction.color1_flux1: i_cModelFlux
+      axisActions.yAction.color1_flux1_err: i_cModelFluxErr
+      axisActions.yAction.color1_flux2: z_cModelFlux
+      axisActions.yAction.color1_flux2_err: z_cModelFluxErr
+      axisActions.yAction.color2_flux1: i_trueFlux
+      axisActions.yAction.color2_flux2: z_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: cmodel_redgals_imz_pulls
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - i_cModel_flag
+      - i_cModel_flag
+      - i_cModel_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
+      axisLabels:
+        x: True i (mag)
+        y: cModel (i-z) - true (i-z) / cModel (i-z) err
+        mag: True i (mag)
+  plot_red_galaxy_zmy_cmodel_residual:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiff
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiff
+      axisActions.yAction.color1_flux1: z_cModelFlux
+      axisActions.yAction.color1_flux2: y_cModelFlux
+      axisActions.yAction.color2_flux1: z_trueFlux
+      axisActions.yAction.color2_flux2: y_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: cmodel_redgals_zmy_residual
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - z_cModel_flag
+      - y_cModel_flag
+      - i_cModel_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
+      axisLabels:
+        x: True i (mag)
+        y: cModel (z-y) - true (z-y) (mmag)
+        mag: True i (mag)
+  plot_red_galaxy_zmy_cmodel_pull:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiffPull
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiffPull
+      axisActions.yAction.color1_flux1: z_cModelFlux
+      axisActions.yAction.color1_flux1_err: z_cModelFluxErr
+      axisActions.yAction.color1_flux2: y_cModelFlux
+      axisActions.yAction.color1_flux2_err: y_cModelFluxErr
+      axisActions.yAction.color2_flux1: z_trueFlux
+      axisActions.yAction.color2_flux2: y_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: cmodel_redgals_zmy_pulls
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - z_cModel_flag
+      - z_cModel_flag
+      - i_cModel_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
+      axisLabels:
+        x: True i (mag)
+        y: cModel (z-y) - true (z-y) / cModel (z-y) err
+        mag: True i (mag)
+  plot_red_galaxy_gmr_gaap0p7_residual:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiff
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiff
+      axisActions.yAction.color1_flux1: g_gaap0p7Flux
+      axisActions.yAction.color1_flux2: r_gaap0p7Flux
+      axisActions.yAction.color2_flux1: g_trueFlux
+      axisActions.yAction.color2_flux2: r_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: gaap0p7_redgals_gmr_residual
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - g_gaapFlux_flag
+      - r_gaapFlux_flag
+      - i_gaapFlux_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
+      axisLabels:
+        x: True i (mag)
+        y: GaAP 0.7 (g-r) - true (g-r) (mmag)
+        mag: True i (mag)
+  plot_red_galaxy_gmr_gaap0p7_pull:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiffPull
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiffPull
+      axisActions.yAction.color1_flux1: g_gaap0p7Flux
+      axisActions.yAction.color1_flux1_err: g_gaap0p7FluxErr
+      axisActions.yAction.color1_flux2: r_gaap0p7Flux
+      axisActions.yAction.color1_flux2_err: r_gaap0p7FluxErr
+      axisActions.yAction.color2_flux1: g_trueFlux
+      axisActions.yAction.color2_flux2: r_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: gaap0p7_redgals_gmr_pulls
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - g_gaapFlux_flag
+      - g_gaapFlux_flag
+      - i_gaapFlux_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
+      axisLabels:
+        x: True i (mag)
+        y: GaAP 0.7 (g-r) - true (g-r) / GaAP 0.7 (g-r) err
+        mag: True i (mag)
+  plot_red_galaxy_rmi_gaap0p7_residual:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiff
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiff
+      axisActions.yAction.color1_flux1: r_gaap0p7Flux
+      axisActions.yAction.color1_flux2: i_gaap0p7Flux
+      axisActions.yAction.color2_flux1: r_trueFlux
+      axisActions.yAction.color2_flux2: i_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: gaap0p7_redgals_rmi_residual
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - r_gaapFlux_flag
+      - i_gaapFlux_flag
+      - i_gaapFlux_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
+      axisLabels:
+        x: True i (mag)
+        y: GaAP 0.7 (r-i) - true (r-i) (mmag)
+        mag: True i (mag)
+  plot_red_galaxy_rmi_gaap0p7_pull:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiffPull
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiffPull
+      axisActions.yAction.color1_flux1: r_gaap0p7Flux
+      axisActions.yAction.color1_flux1_err: r_gaap0p7FluxErr
+      axisActions.yAction.color1_flux2: i_gaap0p7Flux
+      axisActions.yAction.color1_flux2_err: i_gaap0p7FluxErr
+      axisActions.yAction.color2_flux1: r_trueFlux
+      axisActions.yAction.color2_flux2: i_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: gaap0p7_redgals_rmi_pulls
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - r_gaapFlux_flag
+      - r_gaapFlux_flag
+      - i_gaapFlux_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
+      axisLabels:
+        x: True i (mag)
+        y: GaAP 0.7 (r-i) - true (r-i) / GaAP 0.7 (r-i) err
+        mag: True i (mag)
+  plot_red_galaxy_imz_gaap0p7_residual:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiff
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiff
+      axisActions.yAction.color1_flux1: i_gaap0p7Flux
+      axisActions.yAction.color1_flux2: z_gaap0p7Flux
+      axisActions.yAction.color2_flux1: i_trueFlux
+      axisActions.yAction.color2_flux2: z_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: gaap0p7_redgals_imz_residual
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - i_gaapFlux_flag
+      - z_gaapFlux_flag
+      - i_gaapFlux_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
+      axisLabels:
+        x: True i (mag)
+        y: GaAP 0.7 (i-z) - true (i-z) (mmag)
+        mag: True i (mag)
+  plot_red_galaxy_imz_gaap0p7_pull:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiffPull
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiffPull
+      axisActions.yAction.color1_flux1: i_gaap0p7Flux
+      axisActions.yAction.color1_flux1_err: i_gaap0p7FluxErr
+      axisActions.yAction.color1_flux2: z_gaap0p7Flux
+      axisActions.yAction.color1_flux2_err: z_gaap0p7FluxErr
+      axisActions.yAction.color2_flux1: i_trueFlux
+      axisActions.yAction.color2_flux2: z_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: gaap0p7_redgals_imz_pulls
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - i_gaapFlux_flag
+      - i_gaapFlux_flag
+      - i_gaapFlux_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
+      axisLabels:
+        x: True i (mag)
+        y: GaAP 0.7 (i-z) - true (i-z) / GaAP 0.7 (i-z) err
+        mag: True i (mag)
+  plot_red_galaxy_zmy_gaap0p7_residual:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiff
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiff
+      axisActions.yAction.color1_flux1: z_gaap0p7Flux
+      axisActions.yAction.color1_flux2: y_gaap0p7Flux
+      axisActions.yAction.color2_flux1: z_trueFlux
+      axisActions.yAction.color2_flux2: y_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: gaap0p7_redgals_zmy_residual
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - z_gaapFlux_flag
+      - y_gaapFlux_flag
+      - i_gaapFlux_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
+      axisLabels:
+        x: True i (mag)
+        y: GaAP 0.7 (z-y) - true (z-y) (mmag)
+        mag: True i (mag)
+  plot_red_galaxy_zmy_gaap0p7_pull:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiffPull
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiffPull
+      axisActions.yAction.color1_flux1: z_gaap0p7Flux
+      axisActions.yAction.color1_flux1_err: z_gaap0p7FluxErr
+      axisActions.yAction.color1_flux2: y_gaap0p7Flux
+      axisActions.yAction.color1_flux2_err: y_gaap0p7FluxErr
+      axisActions.yAction.color2_flux1: z_trueFlux
+      axisActions.yAction.color2_flux2: y_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: gaap0p7_redgals_zmy_pulls
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - z_gaapFlux_flag
+      - z_gaapFlux_flag
+      - i_gaapFlux_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
+      axisLabels:
+        x: True i (mag)
+        y: GaAP 0.7 (z-y) - true (z-y) / GaAP 0.7 (z-y) err
+        mag: True i (mag)
+  plot_red_galaxy_gmr_gaap1p0_residual:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiff
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiff
+      axisActions.yAction.color1_flux1: g_gaap1p0Flux
+      axisActions.yAction.color1_flux2: r_gaap1p0Flux
+      axisActions.yAction.color2_flux1: g_trueFlux
+      axisActions.yAction.color2_flux2: r_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: gaap1p0_redgals_gmr_residual
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - g_gaapFlux_flag
+      - r_gaapFlux_flag
+      - i_gaapFlux_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
+      axisLabels:
+        x: True i (mag)
+        y: GaAP 1.0 (g-r) - true (g-r) (mmag)
+        mag: True i (mag)
+  plot_red_galaxy_gmr_gaap1p0_pull:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiffPull
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiffPull
+      axisActions.yAction.color1_flux1: g_gaap1p0Flux
+      axisActions.yAction.color1_flux1_err: g_gaap1p0FluxErr
+      axisActions.yAction.color1_flux2: r_gaap1p0Flux
+      axisActions.yAction.color1_flux2_err: r_gaap1p0FluxErr
+      axisActions.yAction.color2_flux1: g_trueFlux
+      axisActions.yAction.color2_flux2: r_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: gaap1p0_redgals_gmr_pulls
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - g_gaapFlux_flag
+      - g_gaapFlux_flag
+      - i_gaapFlux_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
+      axisLabels:
+        x: True i (mag)
+        y: GaAP 1.0 (g-r) - true (g-r) / GaAP 1.0 (g-r) err
+        mag: True i (mag)
+  plot_red_galaxy_rmi_gaap1p0_residual:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiff
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiff
+      axisActions.yAction.color1_flux1: r_gaap1p0Flux
+      axisActions.yAction.color1_flux2: i_gaap1p0Flux
+      axisActions.yAction.color2_flux1: r_trueFlux
+      axisActions.yAction.color2_flux2: i_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: gaap1p0_redgals_rmi_residual
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - r_gaapFlux_flag
+      - i_gaapFlux_flag
+      - i_gaapFlux_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
+      axisLabels:
+        x: True i (mag)
+        y: GaAP 1.0 (r-i) - true (r-i) (mmag)
+        mag: True i (mag)
+  plot_red_galaxy_rmi_gaap1p0_pull:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiffPull
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiffPull
+      axisActions.yAction.color1_flux1: r_gaap1p0Flux
+      axisActions.yAction.color1_flux1_err: r_gaap1p0FluxErr
+      axisActions.yAction.color1_flux2: i_gaap1p0Flux
+      axisActions.yAction.color1_flux2_err: i_gaap1p0FluxErr
+      axisActions.yAction.color2_flux1: r_trueFlux
+      axisActions.yAction.color2_flux2: i_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: gaap1p0_redgals_rmi_pulls
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - r_gaapFlux_flag
+      - r_gaapFlux_flag
+      - i_gaapFlux_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
+      axisLabels:
+        x: True i (mag)
+        y: GaAP 1.0 (r-i) - true (r-i) / GaAP 1.0 (r-i) err
+        mag: True i (mag)
+  plot_red_galaxy_imz_gaap1p0_residual:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiff
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiff
+      axisActions.yAction.color1_flux1: i_gaap1p0Flux
+      axisActions.yAction.color1_flux2: z_gaap1p0Flux
+      axisActions.yAction.color2_flux1: i_trueFlux
+      axisActions.yAction.color2_flux2: z_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: gaap1p0_redgals_imz_residual
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - i_gaapFlux_flag
+      - z_gaapFlux_flag
+      - i_gaapFlux_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
+      axisLabels:
+        x: True i (mag)
+        y: GaAP 1.0 (i-z) - true (i-z) (mmag)
+        mag: True i (mag)
+  plot_red_galaxy_imz_gaap1p0_pull:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiffPull
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiffPull
+      axisActions.yAction.color1_flux1: i_gaap1p0Flux
+      axisActions.yAction.color1_flux1_err: i_gaap1p0FluxErr
+      axisActions.yAction.color1_flux2: z_gaap1p0Flux
+      axisActions.yAction.color1_flux2_err: z_gaap1p0FluxErr
+      axisActions.yAction.color2_flux1: i_trueFlux
+      axisActions.yAction.color2_flux2: z_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: gaap1p0_redgals_imz_pulls
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - i_gaapFlux_flag
+      - i_gaapFlux_flag
+      - i_gaapFlux_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
+      axisLabels:
+        x: True i (mag)
+        y: GaAP 1.0 (i-z) - true (i-z) / GaAP 1.0 (i-z) err
+        mag: True i (mag)
+  plot_red_galaxy_zmy_gaap1p0_residual:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiff
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiff
+      axisActions.yAction.color1_flux1: z_gaap1p0Flux
+      axisActions.yAction.color1_flux2: y_gaap1p0Flux
+      axisActions.yAction.color2_flux1: z_trueFlux
+      axisActions.yAction.color2_flux2: y_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: gaap1p0_redgals_zmy_residual
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - z_gaapFlux_flag
+      - y_gaapFlux_flag
+      - i_gaapFlux_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
+      axisLabels:
+        x: True i (mag)
+        y: GaAP 1.0 (z-y) - true (z-y) (mmag)
+        mag: True i (mag)
+  plot_red_galaxy_zmy_gaap1p0_pull:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import ColorDiffPull
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+      axisActions.xAction.column: i_trueFlux
+      axisActions.yAction: ColorDiffPull
+      axisActions.yAction.color1_flux1: z_gaap1p0Flux
+      axisActions.yAction.color1_flux1_err: z_gaap1p0FluxErr
+      axisActions.yAction.color1_flux2: y_gaap1p0Flux
+      axisActions.yAction.color1_flux2_err: y_gaap1p0FluxErr
+      axisActions.yAction.color2_flux1: z_trueFlux
+      axisActions.yAction.color2_flux2: y_trueFlux
+      axisActions.magAction.column: i_trueFlux
+      connections.plotName: gaap1p0_redgals_zmy_pulls
+      connections.catPlot: matched_true_red_galaxies
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenFalse:
+      - z_gaapFlux_flag
+      - z_gaapFlux_flag
+      - i_gaapFlux_flag
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
+      highSnStatisticSelectorActions.statSelector.threshold: 1500
+      lowSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
+      axisLabels:
+        x: True i (mag)
+        y: GaAP 1.0 (z-y) - true (z-y) / GaAP 1.0 (z-y) err
+        mag: True i (mag)
+  plot_CircAp12_sub_PSF_meas_sky_stars:
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+    - connections.plotName: CircAp12_sub_PSF_meas_stars_i
+  plot_CircAp12_sub_PSF_meas_sky_gals:
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+    - python: 'from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
+
+        '
+      connections.plotName: CircAp12_sub_PSF_meas_gals_i
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+  plot_CircAp12_sub_PSF_meas_calib_psf_used_sky_all:
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+    - python: 'from lsst.analysis.drp.dataSelectors import FlagSelector
+
+        '
+      connections.plotName: CircAp12_sub_PSF_meas_calib_psf_used_all_i
+      sourceSelectorActions.update:
+        galaxySelector: GalaxyIdentifier
+        unknownSelector: UnknownIdentifier
+      selectorActions.calibPointSelector: FlagSelector
+      selectorActions.calibPointSelector.selectWhenTrue:
+      - i_calib_psf_used
+      fixAroundZero: true
+  plot_PSFFluxSN_meas_sky_all:
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+    - python: |
+        from lsst.pipe.tasks.dataFrameActions import DivideColumns
+        config.axisLabels.update({"z": "S/N = psfFlux/psfFluxErr"})
+      connections.plotName: PSFFluxSN_meas_all_i
+      axisActions.zAction: DivideColumns
+      axisActions.zAction.colA.column: i_psfFlux
+      axisActions.zAction.colB.column: i_psfFluxErr
+      sourceSelectorActions: None
+  plot_CModel_sub_PSFmag_meas_sky_galaxies:
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+    - python: |
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
+        config.axisLabels.update({"z": "CModel - PSF (mmag)"})
+      connections.plotName: CModel_sub_PSF_meas_galaxies_i
+      axisActions.zAction.col1: i_cModelFlux
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+  plot_CModel_sub_PSFmag_meas_sky_stars:
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+    - python: 'config.axisLabels.update({"z": "CModel - PSF (mmag)"})
+
+        '
+      connections.plotName: CModel_sub_PSF_meas_stars_i
+      axisActions.zAction.col1: i_cModelFlux
+      fixAroundZero: true
+  plot_CircAp12_sub_PSF_meas_calib_psf_used_all_scatter:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: 'from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier,
+        UnknownIdentifier
+
+        '
+      connections.plotName: CircAp12_sub_PSF_meas_calib_psf_used_all_i
+      sourceSelectorActions.update:
+        galaxySelector: GalaxyIdentifier
+        unknownSelector: UnknownIdentifier
+      selectorActions.calibPointSelector: FlagSelector
+      selectorActions.calibPointSelector.selectWhenTrue:
+      - i_calib_psf_used
+  plot_CircAp12_sub_PSF_meas_stars_scatter:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - connections.plotName: CircAp12_sub_PSF_meas_stars_i
+  plot_CircAp12_sub_PSF_meas_gals_scatter:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: 'from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
+
+        '
+      connections.plotName: CircAp12_sub_PSF_meas_gals_i
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+  skyPlot_skyObject:
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+    - python: |
+        from lsst.analysis.drp.dataSelectors import FlagSelector
+        config.axisLabels.update({"z": "Sky Object i_ap09Flux (nJy)"})
+      connections.plotName: skyObject_i
+      axisActions.zAction: SingleColumnAction
+      axisActions.zAction.column: i_ap09Flux
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenTrue:
+      - sky_object
+      selectorActions.flagSelector.selectWhenFalse:
+      - i_pixelFlags_edge
+      selectorActions.remove:
+      - catSnSelector
+      sourceSelectorActions: None
+      statisticSelectorActions.statSelector.threshold: -1e12
+  histPlot_skyObject:
+    class: lsst.analysis.drp.histPlot.HistPlotTask
+    config:
+    - python: |
+        from lsst.analysis.drp.dataSelectors import FlagSelector
+        from lsst.analysis.drp import calcFunctors
+        from lsst.pipe.tasks.dataFrameActions import SingleColumnAction
+        config.panels["panel1"] = HistPlotConfig
+        config.panels["panel1"].label = "Flux (nJy)"
+        config.panels["panel1"].actions.update = {
+          "hist1": SingleColumnAction(column="i_psfFlux"),
+          "hist2": SingleColumnAction(column="i_ap09Flux"),
+        }
+        config.panels["panel1"].histLabels = {
+          "hist1": "psfFlux",
+          "hist2": "ap09Flux",
+        }
+        config.panels["panel2"] = HistPlotConfig
+        config.panels["panel2"].label = "S/N"
+        config.panels["panel2"].actions.update = {
+          "hist1": calcFunctors.SNCalculator(
+            colA=SingleColumnAction(column="i_psfFlux"),
+            colB=SingleColumnAction(column="i_psfFluxErr"),),
+          "hist2": calcFunctors.SNCalculator(
+            colA=SingleColumnAction(column="i_ap09Flux"),
+            colB=SingleColumnAction(column="i_ap09FluxErr"),),
+        }
+        config.panels["panel2"].histLabels = {
+          "hist1": "psfFlux SN",
+          "hist2": "ap09Flux SN",
+        }
+      connections.plotName: skyObject_i
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenTrue:
+      - sky_object
+      selectorActions.flagSelector.selectWhenFalse:
+      - i_pixelFlags_edge
+  plot_ri_gr_cmodel:
+    class: lsst.analysis.drp.colorColorPlot.ColorColorPlotTask
+    config:
+    - python: 'from lsst.analysis.drp.dataSelectors import FlagSelector
+
+        '
+      connections.plotName: ri_gr_cmodel
+      axisActions.xAction.magDiff.col1: g_cModelFlux
+      axisActions.xAction.magDiff.col2: r_cModelFlux
+      axisActions.xAction.magDiff.returnMillimags: false
+      axisActions.yAction.magDiff.col1: r_cModelFlux
+      axisActions.yAction.magDiff.col2: i_cModelFlux
+      axisActions.yAction.magDiff.returnMillimags: false
+      axisActions.zAction.column: i_cModelFlux
+      axisLabels:
+        x: g - r CModel (mag)
+        y: r - i CModel (mag)
+        z: i_cModelMag (mag)
+      selectorActions.coaddSelector: FlagSelector
+      selectorActions.coaddSelector.selectWhenFalse:
+      - g_cModel_flag
+      - r_cModel_flag
+      - i_cModel_flag
+      selectorActions.flagSelector.bands:
+      - g
+      - r
+      - i
+      selectorActions.catSnSelector.fluxType: cModelFlux
+      selectorActions.catSnSelector.threshold: 50
+      selectorActions.catSnSelector.bands:
+      - g
+      - r
+      - i
+  plot_ri_gr_psf:
+    class: lsst.analysis.drp.colorColorPlot.ColorColorPlotTask
+    config:
+    - connections.plotName: ri_gr_psf
+      axisActions.xAction.magDiff.col1: g_psfFlux
+      axisActions.xAction.magDiff.col2: r_psfFlux
+      axisActions.xAction.magDiff.returnMillimags: false
+      axisActions.yAction.magDiff.col1: r_psfFlux
+      axisActions.yAction.magDiff.col2: i_psfFlux
+      axisActions.yAction.magDiff.returnMillimags: false
+      axisActions.zAction.column: i_psfFlux
+      axisLabels:
+        x: g - r PSF (mag)
+        y: r - i PSF (mag)
+        z: i_PsfMag (mag)
+      selectorActions.flagSelector.bands:
+      - g
+      - r
+      - i
+      selectorActions.catSnSelector.threshold: 50
+      selectorActions.catSnSelector.bands:
+      - g
+      - r
+      - i
+  plot_astromRefCat_sky_tract_dRA:
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import AstromDiff
+        config.axisLabels.update({"z": "$RA_{target} - RA_{ref}$ (marcsec)"})
+      connections.catPlot: objectTable_tract_astrometryRefCat_match
+      connections.plotName: astromRefCatResiduals_sky_ra_coadd_i
+      axisActions.zAction: AstromDiff
+      axisActions.zAction.col1: coord_ra_target
+      axisActions.zAction.col2: coord_ra_ref
+      axisActions.xAction.column: coord_ra_ref
+      axisActions.yAction.column: coord_dec_ref
+      selectorActions.remove:
+      - catSnSelector
+  plot_astromRefCat_sky_tract_dDec:
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import AstromDiff
+        config.axisLabels.update({"z": "$Dec_{target} - Dec_{ref}$ (marcsec)"})
+      connections.catPlot: objectTable_tract_astrometryRefCat_match
+      connections.plotName: astromRefCatResiduals_sky_dec_coadd_i
+      axisActions.zAction: AstromDiff
+      axisActions.zAction.col1: coord_dec_target
+      axisActions.zAction.col2: coord_dec_ref
+      axisActions.xAction.column: coord_ra_ref
+      axisActions.yAction.column: coord_dec_ref
+      selectorActions.remove:
+      - catSnSelector
+  plot_astromRefCat_scatter_tract_dRA:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import AstromDiff
+        config.axisLabels.update({"y": "$RA_{target} - RA_{ref}$ (marcsec)"})
+      connections.catPlot: objectTable_tract_astrometryRefCat_match
+      connections.plotName: astromRefCatResiduals_scatter_ra_coadd_i
+      axisActions.yAction: AstromDiff
+      axisActions.yAction.col1: coord_ra_target
+      axisActions.yAction.col2: coord_ra_ref
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: psfFlux
+      lowSnStatisticSelectorActions.statSelector.fluxType: psfFlux
+  plot_astromRefCat_scatter_tract_dDec:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import AstromDiff
+        config.axisLabels.update({"y": "$Dec_{target} - Dec_{ref}$ (marcsec)"})
+      connections.catPlot: objectTable_tract_astrometryRefCat_match
+      connections.plotName: astromRefCatResiduals_scatter_dec_coadd_i
+      axisActions.yAction: AstromDiff
+      axisActions.yAction.col1: coord_dec_target
+      axisActions.yAction.col2: coord_dec_ref
+      selectorActions.remove:
+      - catSnSelector
+      highSnStatisticSelectorActions.statSelector.fluxType: psfFlux
+      lowSnStatisticSelectorActions.statSelector.fluxType: psfFlux
+  plot_E1Diff_scatter:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcE1
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.axisActions.xAction.column = "i_psfFlux"
+        config.axisActions.magAction.column = "i_psfFlux"
+        config.axisLabels.update({
+               "x": config.axisActions.xAction.column.removesuffix("Flux") + " (mag)",
+               "mag": config.axisActions.magAction.column.removesuffix("Flux") + " (mag)",
+               "y": "E1 Difference (e1 - e1$_{PSF}$)"})
+      axisActions.yAction: SubtractColumns
+      axisActions.yAction.colA: CalcE1
+      axisActions.yAction.colA.colXx: i_ixx
+      axisActions.yAction.colA.colYy: i_iyy
+      axisActions.yAction.colB: CalcE1
+      axisActions.yAction.colB.colXx: i_ixxPSF
+      axisActions.yAction.colB.colYy: i_iyyPSF
+      connections.plotName: E1Diff_scatter_i
+  plot_E2Diff_scatter:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcE2
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.axisActions.xAction.column = "i_psfFlux"
+        config.axisActions.magAction.column = "i_psfFlux"
+        config.axisLabels.update({
+               "x": config.axisActions.xAction.column.removesuffix("Flux") + " (mag)",
+               "mag": config.axisActions.magAction.column.removesuffix("Flux") + " (mag)",
+               "y": "E2 Difference (e2 - e2$_{PSF}$)"})
+      axisActions.yAction: SubtractColumns
+      axisActions.yAction.colA: CalcE2
+      axisActions.yAction.colA.colXx: i_ixx
+      axisActions.yAction.colA.colYy: i_iyy
+      axisActions.yAction.colA.colXy: i_ixy
+      axisActions.yAction.colB: CalcE2
+      axisActions.yAction.colB.colXx: i_ixxPSF
+      axisActions.yAction.colB.colYy: i_iyyPSF
+      axisActions.yAction.colB.colXy: i_ixyPSF
+      connections.plotName: E2Diff_scatter_i
+  plot_shapeSizeFractionalDiff_scatter:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize
+        from lsst.pipe.tasks.dataFrameActions import FractionalDifferenceColumns
+        config.axisActions.xAction.column = "i_psfFlux"
+        config.axisActions.magAction.column = "i_psfFlux"
+        config.axisLabels.update({
+               "x": config.axisActions.xAction.column.removesuffix("Flux") + " (mag)",
+               "mag": config.axisActions.magAction.column.removesuffix("Flux") + " (mag)",
+               "y": "Fractional size residuals (S/S$_{PSF}$ - 1)"})
+      axisActions.yAction: FractionalDifferenceColumns
+      axisActions.yAction.colA: CalcShapeSize
+      axisActions.yAction.colA.colXx: i_ixx
+      axisActions.yAction.colA.colYy: i_iyy
+      axisActions.yAction.colA.colXy: i_ixy
+      axisActions.yAction.colB: CalcShapeSize
+      axisActions.yAction.colB.colXx: i_ixxPSF
+      axisActions.yAction.colB.colYy: i_iyyPSF
+      axisActions.yAction.colB.colXy: i_ixyPSF
+      connections.plotName: ShapeSizeFractionDiff_scatter_i
+  plot_E1Diff_sky:
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcE1
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.axisLabels.update({"z": "E1 Difference (e1 - e1$_{PSF}$)"})
+      axisActions.zAction: SubtractColumns
+      axisActions.zAction.colA: CalcE1
+      axisActions.zAction.colA.colXx: i_ixx
+      axisActions.zAction.colA.colYy: i_iyy
+      axisActions.zAction.colB: CalcE1
+      axisActions.zAction.colB.colXx: i_ixxPSF
+      axisActions.zAction.colB.colYy: i_iyyPSF
+      connections.plotName: E1Diff_sky_i
+      fixAroundZero: true
+  plot_E2Diff_sky:
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcE2
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.axisLabels.update({"z": "E2 Difference (e2 - e2$_{PSF}$)"})
+      axisActions.zAction: SubtractColumns
+      axisActions.zAction.colA: CalcE2
+      axisActions.zAction.colA.colXx: i_ixx
+      axisActions.zAction.colA.colYy: i_iyy
+      axisActions.zAction.colA.colXy: i_ixy
+      axisActions.zAction.colB: CalcE2
+      axisActions.zAction.colB.colXx: i_ixxPSF
+      axisActions.zAction.colB.colYy: i_iyyPSF
+      axisActions.zAction.colB.colXy: i_ixyPSF
+      connections.plotName: E2Diff_sky_i
+      fixAroundZero: true
+  plot_shapeSizeFractionalDiff_sky:
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize
+        from lsst.pipe.tasks.dataFrameActions import FractionalDifferenceColumns
+        config.axisLabels.update({"z": "Fractional Size Residual (S/S$_{PSF}$ - 1)"})
+      axisActions.zAction: FractionalDifferenceColumns
+      axisActions.zAction.colA: CalcShapeSize
+      axisActions.zAction.colA.colXx: i_ixx
+      axisActions.zAction.colA.colYy: i_iyy
+      axisActions.zAction.colA.colXy: i_ixy
+      axisActions.zAction.colB: CalcShapeSize
+      axisActions.zAction.colB.colXx: i_ixxPSF
+      axisActions.zAction.colB.colYy: i_iyyPSF
+      axisActions.zAction.colB.colXy: i_ixyPSF
+      connections.plotName: ShapeSizeFractionDiff_sky_i
+      fixAroundZero: true
+  plot_E1Diff_magDiff_scatter:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcE1, MagDiff
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.axisActions.xAction = MagDiff
+        config.axisActions.xAction.col1 = "i_cModelFlux"
+        config.axisActions.xAction.col2 = "i_psfFlux"
+        config.axisActions.magAction.column = "i_psfFlux"
+        config.axisLabels.update({
+               "x": config.axisActions.xAction.col1.removesuffix("Flux") + " - "
+                    + config.axisActions.xAction.col2.removesuffix("Flux") + " (mag)",
+               "mag": config.axisActions.magAction.column.removesuffix("Flux") + " (mag)",
+               "y": "E1 Difference (e1 - e1$_{PSF}$)"})
+      axisActions.xAction.returnMillimags: true
+      axisActions.yAction: SubtractColumns
+      axisActions.yAction.colA: CalcE1
+      axisActions.yAction.colA.colXx: i_ixx
+      axisActions.yAction.colA.colYy: i_iyy
+      axisActions.yAction.colB: CalcE1
+      axisActions.yAction.colB.colXx: i_ixxPSF
+      axisActions.yAction.colB.colYy: i_iyyPSF
+      highSnStatisticSelectorActions: None
+      lowSnStatisticSelectorActions: None
+      connections.plotName: E1Diff_magDiff_i
+  plot_E2Diff_magDiff_scatter:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcE2, MagDiff
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.axisActions.xAction = MagDiff
+        config.axisActions.xAction.col1 = "i_cModelFlux"
+        config.axisActions.xAction.col2 = "i_psfFlux"
+        config.axisActions.magAction.column = "i_psfFlux"
+        config.axisLabels.update({
+               "x": config.axisActions.xAction.col1.removesuffix("Flux") + " - "
+                    + config.axisActions.xAction.col2.removesuffix("Flux") + " (mag)",
+               "mag": config.axisActions.magAction.column.removesuffix("Flux") + " (mag)",
+               "y": "E2 Difference (e2 - e2$_{PSF}$)"})
+      axisActions.yAction: SubtractColumns
+      axisActions.yAction.colA: CalcE2
+      axisActions.yAction.colA.colXx: i_ixx
+      axisActions.yAction.colA.colYy: i_iyy
+      axisActions.yAction.colA.colXy: i_ixy
+      axisActions.yAction.colB: CalcE2
+      axisActions.yAction.colB.colXx: i_ixxPSF
+      axisActions.yAction.colB.colYy: i_iyyPSF
+      axisActions.yAction.colB.colXy: i_ixyPSF
+      highSnStatisticSelectorActions: None
+      lowSnStatisticSelectorActions: None
+      connections.plotName: E2Diff_magDiff_i
+  plot_shapeSizeFractionalDiff_magDiff_scatter:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize, MagDiff
+        from lsst.pipe.tasks.dataFrameActions import FractionalDifferenceColumns
+        config.axisActions.xAction = MagDiff
+        config.axisActions.xAction.col1 = "i_cModelFlux"
+        config.axisActions.xAction.col2 = "i_psfFlux"
+        config.axisActions.magAction.column = "i_psfFlux"
+        config.axisLabels.update({
+               "x": config.axisActions.xAction.col1.removesuffix("Flux") + " - "
+                    + config.axisActions.xAction.col2.removesuffix("Flux") + " (mag)",
+               "mag": config.axisActions.magAction.column.removesuffix("Flux") + " (mag)",
+               "y": "Fractional size residuals (S/S$_{PSF}$ - 1)"})
+      axisActions.yAction: FractionalDifferenceColumns
+      axisActions.yAction.colA: CalcShapeSize
+      axisActions.yAction.colA.colXx: i_ixx
+      axisActions.yAction.colA.colYy: i_iyy
+      axisActions.yAction.colA.colXy: i_ixy
+      axisActions.yAction.colB: CalcShapeSize
+      axisActions.yAction.colB.colXx: i_ixxPSF
+      axisActions.yAction.colB.colYy: i_iyyPSF
+      axisActions.yAction.colB.colXy: i_ixyPSF
+      highSnStatisticSelectorActions: None
+      lowSnStatisticSelectorActions: None
+      connections.plotName: ShapeSizeFractionDiff_magDiff_scatter_i
+  plot_RhoStatistics:
+    class: lsst.analysis.drp.rhoPlot.RhoPlotTask
+    config:
+    - rhoStatisticsAction.treecorr.max_sep: 100
+  plot_wFit_PSF:
+    class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
+    config:
+    - python: 'from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector,
+        SnSelector
+
+        '
+      connections.plotName: wFit_PSF
+      axisActions.xAction.magDiff.col1: g_psfFlux
+      axisActions.xAction.magDiff.col2: r_psfFlux
+      axisActions.yAction.magDiff.col1: r_psfFlux
+      axisActions.yAction.magDiff.col2: i_psfFlux
+      axisActions.xAction.magDiff.returnMillimags: false
+      axisActions.yAction.magDiff.returnMillimags: false
+      axisActions.magAction.column: r_psfFlux
+      axisLabels:
+        x: g - r PSF Magnitude (mag)
+        y: r - i PSF Magnitude (mag)
+        mag: r PSF Magnitude (mag)
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands:
+      - g
+      - r
+      - i
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: psfFlux
+      selectorActions.catSnSelector.threshold: 50
+      selectorActions.catSnSelector.bands:
+      - g
+      - r
+      - i
+      stellarLocusFitDict:
+        xMin: 0.28
+        xMax: 1.0
+        yMin: 0.02
+        yMax: 0.48
+        mHW: 0.52
+        bHW: -0.08
+  plot_wFit_CModel:
+    class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
+    config:
+    - python: 'from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector,
+        SnSelector, FlagSelector
+
+        '
+      connections.plotName: wFit_CModel
+      axisActions.xAction.magDiff.col1: g_cModelFlux
+      axisActions.xAction.magDiff.col2: r_cModelFlux
+      axisActions.yAction.magDiff.col1: r_cModelFlux
+      axisActions.yAction.magDiff.col2: i_cModelFlux
+      axisActions.xAction.magDiff.returnMillimags: false
+      axisActions.yAction.magDiff.returnMillimags: false
+      axisActions.magAction.column: r_cModelFlux
+      axisLabels:
+        x: g - r CModel Magnitude (mag)
+        y: r - i CModel Magnitude (mag)
+        mag: r CModel Magnitude (mag)
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands:
+      - g
+      - r
+      - i
+      selectorActions.additionalFlagSelector: FlagSelector
+      selectorActions.additionalFlagSelector.selectWhenFalse:
+      - g_cModel_flag
+      - r_cModel_flag
+      - i_cModel_flag
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: cModelFlux
+      selectorActions.catSnSelector.threshold: 50
+      selectorActions.catSnSelector.bands:
+      - g
+      - r
+      - i
+      stellarLocusFitDict:
+        xMin: 0.28
+        xMax: 1.0
+        yMin: 0.02
+        yMax: 0.48
+        mHW: 0.52
+        bHW: -0.08
+  plot_xFit_PSF:
+    class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
+    config:
+    - python: 'from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector,
+        SnSelector
+
+        '
+      connections.plotName: xFit_PSF
+      axisActions.xAction.magDiff.col1: g_psfFlux
+      axisActions.xAction.magDiff.col2: r_psfFlux
+      axisActions.yAction.magDiff.col1: r_psfFlux
+      axisActions.yAction.magDiff.col2: i_psfFlux
+      axisActions.xAction.magDiff.returnMillimags: false
+      axisActions.yAction.magDiff.returnMillimags: false
+      axisActions.magAction.column: r_psfFlux
+      axisLabels:
+        x: g - r PSF Magnitude (mag)
+        y: r - i PSF Magnitude (mag)
+        mag: r PSF Magnitude (mag)
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands:
+      - g
+      - r
+      - i
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: psfFlux
+      selectorActions.catSnSelector.threshold: 50
+      selectorActions.catSnSelector.bands:
+      - g
+      - r
+      - i
+      stellarLocusFitDict:
+        xMin: 1.05
+        xMax: 1.55
+        yMin: 0.78
+        yMax: 1.62
+        mHW: 13.35
+        bHW: -15.54
+  plot_xFit_CModel:
+    class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
+    config:
+    - python: 'from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector,
+        SnSelector, FlagSelector
+
+        '
+      connections.plotName: xFit_CModel
+      axisActions.xAction.magDiff.col1: g_cModelFlux
+      axisActions.xAction.magDiff.col2: r_cModelFlux
+      axisActions.yAction.magDiff.col1: r_cModelFlux
+      axisActions.yAction.magDiff.col2: i_cModelFlux
+      axisActions.xAction.magDiff.returnMillimags: false
+      axisActions.yAction.magDiff.returnMillimags: false
+      axisActions.magAction.column: r_cModelFlux
+      axisLabels:
+        x: g - r CModel Magnitude (mag)
+        y: r - i CModel Magnitude (mag)
+        mag: r CModel Magnitude (mag)
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands:
+      - g
+      - r
+      - i
+      selectorActions.additionalFlagSelector: FlagSelector
+      selectorActions.additionalFlagSelector.selectWhenFalse:
+      - g_cModel_flag
+      - r_cModel_flag
+      - i_cModel_flag
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: psfFlux
+      selectorActions.catSnSelector.threshold: 50
+      selectorActions.catSnSelector.bands:
+      - g
+      - r
+      - i
+      stellarLocusFitDict:
+        xMin: 1.05
+        xMax: 1.55
+        yMin: 0.78
+        yMax: 1.62
+        mHW: 13.35
+        bHW: -15.54
+  plot_yFit_PSF:
+    class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
+    config:
+    - python: 'from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector,
+        SnSelector
+
+        '
+      connections.plotName: yFit_PSF
+      axisActions.xAction.magDiff.col1: r_psfFlux
+      axisActions.xAction.magDiff.col2: i_psfFlux
+      axisActions.yAction.magDiff.col1: i_psfFlux
+      axisActions.yAction.magDiff.col2: z_psfFlux
+      axisActions.xAction.magDiff.returnMillimags: false
+      axisActions.yAction.magDiff.returnMillimags: false
+      axisActions.magAction.column: i_psfFlux
+      axisLabels:
+        x: r - i PSF Magnitude (mag)
+        y: i - z PSF Magnitude (mag)
+        mag: i PSF Magnitude (mag)
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands:
+      - r
+      - i
+      - z
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: psfFlux
+      selectorActions.catSnSelector.threshold: 50
+      selectorActions.catSnSelector.bands:
+      - r
+      - i
+      - z
+      stellarLocusFitDict:
+        xMin: 0.82
+        xMax: 2.01
+        yMin: 0.37
+        yMax: 0.9
+        mHW: 0.4
+        bHW: 0.03
+  plot_yFit_CModel:
+    class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
+    config:
+    - python: 'from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector,
+        SnSelector, FlagSelector
+
+        '
+      connections.plotName: yFit_CModel
+      axisActions.xAction.magDiff.col1: r_cModelFlux
+      axisActions.xAction.magDiff.col2: i_cModelFlux
+      axisActions.yAction.magDiff.col1: i_cModelFlux
+      axisActions.yAction.magDiff.col2: z_cModelFlux
+      axisActions.xAction.magDiff.returnMillimags: false
+      axisActions.yAction.magDiff.returnMillimags: false
+      axisActions.magAction.column: i_cModelFlux
+      axisLabels:
+        x: r - i CModel Magnitude (mag)
+        y: i - z CModel Magnitude (mag)
+        mag: i CModel Magnitude (mag)
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands:
+      - r
+      - i
+      - z
+      selectorActions.additionalFlagSelector: FlagSelector
+      selectorActions.additionalFlagSelector.selectWhenFalse:
+      - g_cModel_flag
+      - r_cModel_flag
+      - i_cModel_flag
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: psfFlux
+      selectorActions.catSnSelector.threshold: 50
+      selectorActions.catSnSelector.bands:
+      - r
+      - i
+      - z
+      stellarLocusFitDict:
+        xMin: 0.82
+        xMax: 2.01
+        yMin: 0.37
+        yMax: 0.9
+        mHW: 0.4
+        bHW: 0.03
+  match_astromRefCat_objectTable:
+    class: lsst.analysis.drp.catalogMatch.CatalogMatchTask
+  plot_matched_diff_cModelFlux:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        config.nonBandColumnPrefixes.append("refcat")
+      axisActions.xAction.column: refcat_flux_i
+      axisActions.yAction.col1: i_cModelFlux
+      axisActions.yAction.col2: refcat_flux_i
+      axisActions.magAction.column: refcat_flux_i
+      connections.catPlot: matched_truth_summary_objectTable_tract
+      connections.plotName: matched_diff_cModelFlux
+      highSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      highSnStatisticSelectorActions.statSelector.threshold: 100
+      lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      lowSnStatisticSelectorActions.statSelector.threshold: 20
+      selectorActions.catSnSelector.fluxType: parameters.model
+      selectorActions.catSnSelector.threshold: 0.0
+      selectorActions.flagSelector: FlagSelector
+      sourceSelectorActions.sourceSelector.band: ref
+      sourceSelectorActions.update:
+        galaxySelector: GalaxyIdentifier
+      sourceSelectorActions.galaxySelector.band: ref
+      axisLabels:
+        x: Reference (mag)
+        mag: cModel (mag)
+        y: cModel - Reference (mmag)
+  plot_matched_chi_cModelFlux_scatter:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns, DivideColumns
+        config.nonBandColumnPrefixes.append("refcat")
+      axisActions.xAction.column: refcat_flux_i
+      axisActions.yAction: DivideColumns
+      axisActions.yAction.colA: SubtractColumns
+      axisActions.yAction.colA.colA.column: i_cModelFlux
+      axisActions.yAction.colA.colB.column: refcat_flux_i
+      axisActions.yAction.colB.column: i_cModelFluxErr
+      axisActions.magAction.column: refcat_flux_i
+      connections.catPlot: matched_truth_summary_objectTable_tract
+      connections.plotName: matched_chi_cModelFlux
+      highSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      highSnStatisticSelectorActions.statSelector.threshold: 100
+      lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      lowSnStatisticSelectorActions.statSelector.threshold: 20
+      selectorActions.catSnSelector.fluxType: parameters.model
+      selectorActions.catSnSelector.threshold: 0.0
+      selectorActions.flagSelector: FlagSelector
+      sourceSelectorActions.sourceSelector.band: ref
+      sourceSelectorActions.update:
+        galaxySelector: GalaxyIdentifier
+      sourceSelectorActions.galaxySelector.band: ref
+      axisLabels:
+        x: Reference (mag)
+        mag: cModel (mag)
+        y: chi = (cModel - Reference Flux)/(cModel err)
+  plot_matched_diff_x:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.nonBandColumnPrefixes.append("refcat")
+      axisActions.xAction.column: refcat_flux_i
+      axisActions.yAction: SubtractColumns
+      axisActions.yAction.colA.column: x
+      axisActions.yAction.colB.column: refcat_x
+      axisActions.magAction.column: refcat_flux_i
+      connections.catPlot: matched_truth_summary_objectTable_tract
+      connections.plotName: matched_diff_x
+      highSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      highSnStatisticSelectorActions.statSelector.threshold: 100
+      lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      lowSnStatisticSelectorActions.statSelector.threshold: 20
+      selectorActions.catSnSelector.fluxType: parameters.model
+      selectorActions.catSnSelector.threshold: 0.0
+      selectorActions.flagSelector: FlagSelector
+      sourceSelectorActions.sourceSelector.band: ref
+      sourceSelectorActions.update:
+        galaxySelector: GalaxyIdentifier
+      sourceSelectorActions.galaxySelector.band: ref
+      axisLabels:
+        x: Reference (mag)
+        mag: cModel (mag)
+        y: x - Reference x (pix)
+  plot_matched_diff_y:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.nonBandColumnPrefixes.append("refcat")
+      axisActions.xAction.column: refcat_flux_i
+      axisActions.yAction: SubtractColumns
+      axisActions.yAction.colA.column: y
+      axisActions.yAction.colB.column: refcat_y
+      axisActions.magAction.column: refcat_flux_i
+      connections.catPlot: matched_truth_summary_objectTable_tract
+      connections.plotName: matched_diff_y
+      highSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      highSnStatisticSelectorActions.statSelector.threshold: 100
+      lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      lowSnStatisticSelectorActions.statSelector.threshold: 20
+      selectorActions.catSnSelector.fluxType: parameters.model
+      selectorActions.catSnSelector.threshold: 0.0
+      selectorActions.flagSelector: FlagSelector
+      sourceSelectorActions.sourceSelector.band: ref
+      sourceSelectorActions.update:
+        galaxySelector: GalaxyIdentifier
+      sourceSelectorActions.galaxySelector.band: ref
+      axisLabels:
+        x: Reference (mag)
+        mag: cModel (mag)
+        y: x - Reference x (pix)
+  plot_matched_chi_x:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.pipe.tasks.dataFrameActions import DivideColumns, SubtractColumns
+        config.nonBandColumnPrefixes.append("refcat")
+      axisActions.xAction.column: refcat_flux_i
+      axisActions.yAction: DivideColumns
+      axisActions.yAction.colA: SubtractColumns
+      axisActions.yAction.colA.colA.column: x
+      axisActions.yAction.colA.colB.column: refcat_x
+      axisActions.yAction.colB.column: xErr
+      axisActions.magAction.column: refcat_flux_i
+      connections.catPlot: matched_truth_summary_objectTable_tract
+      connections.plotName: matched_chi_x
+      highSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      highSnStatisticSelectorActions.statSelector.threshold: 100
+      lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      lowSnStatisticSelectorActions.statSelector.threshold: 20
+      selectorActions.catSnSelector.fluxType: parameters.model
+      selectorActions.catSnSelector.threshold: 0.0
+      selectorActions.flagSelector: FlagSelector
+      sourceSelectorActions.sourceSelector.band: ref
+      sourceSelectorActions.update:
+        galaxySelector: GalaxyIdentifier
+      sourceSelectorActions.galaxySelector.band: ref
+      axisLabels:
+        x: Reference (mag)
+        mag: cModel (mag)
+        y: chi = (x - Reference x)/(x err)
+  plot_matched_chi_y:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+    - python: |
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.pipe.tasks.dataFrameActions import DivideColumns, SubtractColumns
+        config.nonBandColumnPrefixes.append("refcat")
+      axisActions.xAction.column: refcat_flux_i
+      axisActions.yAction: DivideColumns
+      axisActions.yAction.colA: SubtractColumns
+      axisActions.yAction.colA.colA.column: y
+      axisActions.yAction.colA.colB.column: refcat_y
+      axisActions.yAction.colB.column: yErr
+      axisActions.magAction.column: refcat_flux_i
+      connections.catPlot: matched_truth_summary_objectTable_tract
+      connections.plotName: matched_chi_y
+      highSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      highSnStatisticSelectorActions.statSelector.threshold: 100
+      lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      lowSnStatisticSelectorActions.statSelector.threshold: 20
+      selectorActions.catSnSelector.fluxType: parameters.model
+      selectorActions.catSnSelector.threshold: 0.0
+      selectorActions.flagSelector: FlagSelector
+      sourceSelectorActions.sourceSelector.band: ref
+      sourceSelectorActions.update:
+        galaxySelector: GalaxyIdentifier
+      sourceSelectorActions.galaxySelector.band: ref
+      axisLabels:
+        x: Reference (mag)
+        mag: cModel (mag)
+        y: chi = (y - Reference y)/(y err)
+  plot_e1_scatter_visit:
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcE1
+        config.axisLabels.update({"y": "E1: (i$_{xx}$ - i$_{yy}$)/(i$_{xx}$ + i$_{yy}$)"})
+      axisActions.yAction: CalcE1
+      axisActions.yAction.colXx: ixx
+      axisActions.yAction.colYy: iyy
+      connections.plotName: e1_ixx
+  plot_e1_sky_visit:
+    class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcE1
+        config.axisLabels.update({"z": "E1: (i$_{xx}$ - i$_{yy}$)/(i$_{xx}$ + i$_{yy}$)"})
+      axisActions.zAction: CalcE1
+      axisActions.zAction.colXx: ixx
+      axisActions.zAction.colYy: iyy
+      connections.plotName: e1_ixx
+  plot_e2_scatter_visit:
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcE2
+        config.axisLabels.update({"y": "E2: 2i$_{xy}$/(i$_{xx}$ + i$_{yy}$)"})
+      axisActions.yAction: CalcE2
+      axisActions.yAction.colXx: ixx
+      axisActions.yAction.colYy: iyy
+      axisActions.yAction.colXy: ixy
+      connections.plotName: e2_ixx
+  plot_e2_sky_visit:
+    class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcE2
+        config.axisLabels.update({"z": "E2: 2i$_{xy}$/(i$_{xx}$ + i$_{yy}$)"})
+      axisActions.zAction: CalcE2
+      axisActions.zAction.colXx: ixx
+      axisActions.zAction.colYy: iyy
+      axisActions.zAction.colXy: ixy
+      connections.plotName: e2_ixx
+  plot_shapeSize_scatter_visit:
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize
+        config.axisLabels.update({"y": "Shape: (i$_{xx}$*i$_{yy}$ - i$_{xy}^2$)$^{1/4}$"})
+      axisActions.yAction: CalcShapeSize
+      axisActions.yAction.colXx: ixx
+      axisActions.yAction.colYy: iyy
+      axisActions.yAction.colXy: ixy
+      connections.plotName: shape_ixx
+  plot_shapeSize_sky_visit:
+    class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize
+        config.axisLabels.update({"z": "Shape: (i$_{xx}$*i$_{yy}$ - i$_{xy}^2$)$^{1/4}$"})
+      axisActions.zAction: CalcShapeSize
+      axisActions.zAction.colXx: ixx
+      axisActions.zAction.colYy: iyy
+      axisActions.zAction.colXy: ixy
+      connections.plotName: shape_ixx
+  plot_e1PSF_scatter_visit:
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcE1
+        config.axisLabels.update({"y": "E1: (i$_{xx}$PSF - i$_{yy}$PSF)/(i$_{xx}$PSF + i$_{yy}$PSF)"})
+      axisActions.yAction: CalcE1
+      axisActions.yAction.colXx: ixxPSF
+      axisActions.yAction.colYy: iyyPSF
+      connections.plotName: e1_ixxPSF
+  plot_e1PSF_sky_visit:
+    class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcE1
+        config.axisLabels.update({"z": "E1: (i$_{xx}$PSF - i$_{yy}$PSF)/(i$_{xx}$PSF + i$_{yy}$PSF)"})
+      axisActions.zAction: CalcE1
+      axisActions.zAction.colXx: ixxPSF
+      axisActions.zAction.colYy: iyyPSF
+      connections.plotName: e1_ixxPSF
+  plot_e2PSF_sky_visit:
+    class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcE2
+        config.axisLabels.update({"z": "E2: 2i$_{xy}$PSF/(i$_{xx}$PSF + i$_{yy}$PSF)"})
+      axisActions.zAction: CalcE2
+      axisActions.zAction.colXx: ixxPSF
+      axisActions.zAction.colYy: iyyPSF
+      axisActions.zAction.colXy: ixyPSF
+      connections.plotName: e2_ixxPSF
+  plot_e2PSF_scatter_visit:
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcE2
+        config.axisLabels.update({"y": "E2: 2i$_{xy}$PSF/(i$_{xx}$PSF + i$_{yy}$PSF)"})
+      axisActions.yAction: CalcE2
+      axisActions.yAction.colXx: ixxPSF
+      axisActions.yAction.colYy: iyyPSF
+      axisActions.yAction.colXy: ixyPSF
+      connections.plotName: e2_ixxPSF
+  plot_ellipResids_quiver_visit:
+    class: lsst.analysis.drp.quiverPlotVisit.QuiverPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcE, CalcEDiff
+        config.axisLabels.update({"z": "E Difference (e$_{MEAS}$ - e$_{PSF}$)"})
+      axisActions.zAction: CalcEDiff
+      axisActions.zAction.halvePhaseAngle: true
+      axisActions.zAction.colA: CalcE
+      axisActions.zAction.colA.colXx: ixx
+      axisActions.zAction.colA.colYy: iyy
+      axisActions.zAction.colA.colXy: ixy
+      axisActions.zAction.colA.halvePhaseAngle: false
+      axisActions.zAction.colB: CalcE
+      axisActions.zAction.colB.colXx: ixxPSF
+      axisActions.zAction.colB.colYy: iyyPSF
+      axisActions.zAction.colB.colXy: ixyPSF
+      axisActions.zAction.colB.halvePhaseAngle: false
+      connections.plotName: Ediff_ixxPSF
+  plot_shapeSizePSF_scatter_visit:
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize
+        config.axisLabels.update({"y": "Shape: (i$_{xx}$PSF*i$_{yy}$PSF - i$_{xy}$PSF^2$)$^{1/4}$"})
+      axisActions.yAction: CalcShapeSize
+      axisActions.yAction.colXx: ixxPSF
+      axisActions.yAction.colYy: iyyPSF
+      axisActions.yAction.colXy: ixyPSF
+      connections.plotName: shape_ixxPSF
+  plot_shapeSizePSF_sky_visit:
+    class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize
+        config.axisLabels.update({"z": "Shape: (i$_{xx}$PSF*i$_{yy}$PSF - i$_{xy}$PSF$^2$)$^{1/4}$"})
+      axisActions.zAction: CalcShapeSize
+      axisActions.zAction.colXx: ixxPSF
+      axisActions.zAction.colYy: iyyPSF
+      axisActions.zAction.colXy: ixyPSF
+      connections.plotName: shape_ixxPSF
+  plot_shapeSizeDiff_scatter_visit:
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.axisLabels.update({"y": "Shape Difference (i$_{xx}$ - i$_{xx}$PSF)"})
+      axisActions.yAction: SubtractColumns
+      axisActions.yAction.colA: CalcShapeSize
+      axisActions.yAction.colA.colXx: ixx
+      axisActions.yAction.colA.colYy: iyy
+      axisActions.yAction.colA.colXy: ixy
+      axisActions.yAction.colB: CalcShapeSize
+      axisActions.yAction.colB.colXx: ixxPSF
+      axisActions.yAction.colB.colYy: iyyPSF
+      axisActions.yAction.colB.colXy: ixyPSF
+      connections.plotName: shapeDiff_ixxPSF
+  plot_shapeSizeFractionalDiff_scatter_visit:
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize
+        from lsst.pipe.tasks.dataFrameActions import FractionalDifferenceColumns
+        config.axisLabels.update({"y": "Fractional shape difference (i$_{xx}$ - i$_{xx}$PSF)"})
+      axisActions.yAction: FractionalDifferenceColumns
+      axisActions.yAction.colA: CalcShapeSize
+      axisActions.yAction.colA.colXx: ixx
+      axisActions.yAction.colA.colYy: iyy
+      axisActions.yAction.colA.colXy: ixy
+      axisActions.yAction.colB: CalcShapeSize
+      axisActions.yAction.colB.colXx: ixxPSF
+      axisActions.yAction.colB.colYy: iyyPSF
+      axisActions.yAction.colB.colXy: ixyPSF
+      connections.plotName: shapeFractionDiff_sizePSF_scatter
+  plot_E1Diff_scatter_visit:
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcE1
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.axisLabels.update({"y": "E1 Difference (i$_{xx}$ - i$_{xx}$PSF)"})
+      axisActions.yAction: SubtractColumns
+      axisActions.yAction.colA: CalcE1
+      axisActions.yAction.colA.colXx: ixx
+      axisActions.yAction.colA.colYy: iyy
+      axisActions.yAction.colB: CalcE1
+      axisActions.yAction.colB.colXx: ixxPSF
+      axisActions.yAction.colB.colYy: iyyPSF
+      connections.plotName: E1Diff_ixxPSF
+  plot_E2Diff_scatter_visit:
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcE2
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.axisLabels.update({"y": "E2 Difference (i$_{xx}$ - i$_{xx}$PSF)"})
+      axisActions.yAction: SubtractColumns
+      axisActions.yAction.colA: CalcE2
+      axisActions.yAction.colA.colXx: ixx
+      axisActions.yAction.colA.colYy: iyy
+      axisActions.yAction.colB: CalcE2
+      axisActions.yAction.colB.colXx: ixxPSF
+      axisActions.yAction.colB.colYy: iyyPSF
+      connections.plotName: E2Diff_ixxPSF
+  plot_E1Diff_sky_visit:
+    class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcE1
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.axisLabels.update({"z": "E1 Difference (i$_{xx}$ - i$_{xx}$PSF)"})
+      axisActions.zAction: SubtractColumns
+      axisActions.zAction.colA: CalcE1
+      axisActions.zAction.colA.colXx: ixx
+      axisActions.zAction.colA.colYy: iyy
+      axisActions.zAction.colB: CalcE1
+      axisActions.zAction.colB.colXx: ixxPSF
+      axisActions.zAction.colB.colYy: iyyPSF
+      connections.plotName: E1Diff_ixxPSF
+  plot_E2Diff_sky_visit:
+    class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcE2
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.axisLabels.update({"z": "E2 Difference (i$_{xx}$ - i$_{xx}$PSF)"})
+      axisActions.zAction: SubtractColumns
+      axisActions.zAction.colA: CalcE2
+      axisActions.zAction.colA.colXx: ixx
+      axisActions.zAction.colA.colYy: iyy
+      axisActions.zAction.colA.colXy: ixy
+      axisActions.zAction.colB: CalcE2
+      axisActions.zAction.colB.colXx: ixxPSF
+      axisActions.zAction.colB.colYy: iyyPSF
+      axisActions.zAction.colB.colXy: ixyPSF
+      connections.plotName: E2Diff_ixxPSF
+  plot_ShapeDiff_sky_visit:
+    class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.axisLabels.update({"z": "Size Difference (i$_{xx}$ - i$_{xx}$PSF)"})
+      axisActions.zAction: SubtractColumns
+      axisActions.zAction.colA: CalcShapeSize
+      axisActions.zAction.colA.colXx: ixx
+      axisActions.zAction.colA.colYy: iyy
+      axisActions.zAction.colA.colXy: ixy
+      axisActions.zAction.colB: CalcShapeSize
+      axisActions.zAction.colB.colXx: ixxPSF
+      axisActions.zAction.colB.colYy: iyyPSF
+      axisActions.zAction.colB.colXy: ixyPSF
+      connections.plotName: ShapeSizeDiff_ixxPSF
+  plot_CircAp12_sub_PSF_meas_sky_stars_visit:
+    class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
+    config:
+    - connections.plotName: CircAp12_sub_PSF_meas_stars
+  plot_CircAp12_sub_PSF_meas_sky_gals_visit:
+    class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
+    config:
+    - python: 'from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
+
+        '
+      connections.plotName: CircAp12_sub_PSF_meas_gals
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      sourceSelectorActions.sourceSelector.band: ''
+  plot_CircAp12_sub_PSF_meas_calib_psf_used_sky_stars_visit:
+    class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
+    config:
+    - python: 'from lsst.analysis.drp.dataSelectors import FlagSelector
+
+        '
+      connections.plotName: CircAp12_sub_PSF_meas_calib_psf_used_stars
+      selectorActions.calibPointSelector: FlagSelector
+      selectorActions.calibPointSelector.selectWhenTrue:
+      - calib_psf_used
+  plot_CircAp12_sub_PSF_meas_calib_psf_used_sky_gals_visit:
+    class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
+    config:
+    - python: 'from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+
+        '
+      connections.plotName: CircAp12_sub_PSF_meas_calib_psf_used_gals
+      selectorActions.calibPointSelector: FlagSelector
+      selectorActions.calibPointSelector.selectWhenTrue:
+      - calib_psf_used
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      sourceSelectorActions.sourceSelector.band: ''
+  plot_CircAp12_sub_PSF_calib_psf_used_sky_unknown_visit:
+    class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
+    config:
+    - python: 'from lsst.analysis.drp.dataSelectors import FlagSelector, UnknownIdentifier
+
+        '
+      connections.plotName: CircAp12_sub_PSF_meas_calib_psf_used_unkowns
+      selectorActions.calibPointSelector: FlagSelector
+      selectorActions.calibPointSelector.selectWhenTrue:
+      - calib_psf_used
+      sourceSelectorActions.sourceSelector: UnknownIdentifier
+      sourceSelectorActions.sourceSelector.band: ''
+  plot_CircAp12_sub_PSF_meas_calib_psf_used_scatter_visit:
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+    - python: 'from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier,
+        UnknownIdentifier
+
+        '
+      connections.plotName: CircAp12_sub_PSF_meas_calib_psf_used
+      selectorActions.calibPointSelector: FlagSelector
+      selectorActions.calibPointSelector.selectWhenTrue:
+      - calib_psf_used
+      sourceSelectorActions.update:
+        galaxySelector: GalaxyIdentifier
+        unknownSelector: UnknownIdentifier
+      sourceSelectorActions.galaxySelector.band: ''
+      sourceSelectorActions.unknownSelector.band: ''
+  plot_CircAp12_sub_PSF_all_scatter_visit:
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+    - python: 'from lsst.analysis.drp.dataSelectors import GalaxyIdentifier, UnknownIdentifier
+
+        '
+      connections.plotName: CircAp12_sub_PSF_all
+      sourceSelectorActions.update:
+        galaxySelector: GalaxyIdentifier
+        unknownSelector: UnknownIdentifier
+      sourceSelectorActions.galaxySelector.band: ''
+      sourceSelectorActions.unknownSelector.band: ''
+  plot_CircAp25_sub_PSF_all_scatter_visit:
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier, UnknownIdentifier
+        config.axisActions.yAction.col1 = "ap25Flux"
+        config.axisLabels.update({"y": "{} - {} (mmag)".
+                                 format(config.axisActions.yAction.col1.removesuffix("Flux"),
+                                        config.axisActions.yAction.col2.removesuffix("Flux"))})
+      connections.plotName: CircAp25_sub_PSF_all
+      sourceSelectorActions.update:
+        galaxySelector: GalaxyIdentifier
+        unknownSelector: UnknownIdentifier
+      sourceSelectorActions.galaxySelector.band: ''
+      sourceSelectorActions.unknownSelector.band: ''
+  plot_CircAp12_sub_PSF_gals_scatter_visit:
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+    - python: 'from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
+
+        '
+      connections.plotName: CircAp12_sub_PSF_gals
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      sourceSelectorActions.sourceSelector.band: ''
+  plot_CircAp25_sub_PSF_gals_scatter_visit:
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
+        config.axisActions.yAction.col1 = "ap25Flux"
+        config.axisLabels.update({"y": "{} - {} (mmag)".
+                                 format(config.axisActions.yAction.col1.removesuffix("Flux"),
+                                        config.axisActions.yAction.col2.removesuffix("Flux"))})
+      connections.plotName: CircAp25_sub_PSF_gals
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      sourceSelectorActions.sourceSelector.band: ''
+  plot_CircAp12_sub_PSF_meas_scatter_visit:
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+    - connections.plotName: CircAp12_sub_PSF_meas
+  plot_CircAp25_sub_PSF_meas_scatter_visit:
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+    - python: |
+        config.axisActions.yAction.col1 = "ap25Flux"
+        config.axisLabels.update({"y": "{} - {} (mmag)".
+                                 format(config.axisActions.yAction.col1.removesuffix("Flux"),
+                                        config.axisActions.yAction.col2.removesuffix("Flux"))})
+      connections.plotName: CircAp25_sub_PSF_meas
+  plot_PSFluxSN_meas_sky_all_visit:
+    class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
+    config:
+    - python: |
+        from lsst.pipe.tasks.dataFrameActions import DivideColumns
+        config.axisLabels.update({"z": "S/N = psfFlux/psfFluxErr"})
+      axisActions.zAction: DivideColumns
+      axisActions.zAction.colA.column: psfFlux
+      axisActions.zAction.colB.column: psfFluxErr
+      connections.plotName: PSFluxSN_meas_all
+      sourceSelectorActions: None
+  plot_skyObject_sky_visit:
+    class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.dataSelectors import FlagSelector
+        from lsst.pipe.tasks.dataFrameActions import SingleColumnAction
+        config.axisLabels.update({"z": "Sky Object: ap09Flux (nJy)"})
+      connections.plotName: skyObject
+      axisActions.zAction: SingleColumnAction
+      axisActions.zAction.column: ap09Flux
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenTrue:
+      - sky_source
+      selectorActions.remove:
+      - catSnSelector
+      sourceSelectorActions: None
+      statisticSelectorActions.statSelector.threshold: -1e12
+  plot_astromRefCat_sky_visit_dRA:
+    class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import AstromDiff
+        config.axisLabels.update({"z": "$RA_{target} - RA_{ref}$ (marcsec)"})
+      connections.plotName: astromRefCatResiduals_sky_ra_visit
+      connections.catPlot: sourceTable_visit_astrometryRefCat_match
+      axisActions.zAction: AstromDiff
+      axisActions.zAction.col1: coord_ra_target
+      axisActions.zAction.col2: coord_ra_ref
+      axisActions.xAction.column: coord_ra_ref
+      axisActions.yAction.column: coord_dec_ref
+      selectorActions.remove:
+      - catSnSelector
+  plot_astromRefCat_sky_visit_dDec:
+    class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import AstromDiff
+        config.axisLabels.update({"z": "$Dec_{target} - Dec_{ref}$ (marcsec)"})
+      connections.plotName: astromRefCatResiduals_sky_dec_visit
+      connections.catPlot: sourceTable_visit_astrometryRefCat_match
+      axisActions.zAction: AstromDiff
+      axisActions.zAction.col1: coord_dec_target
+      axisActions.zAction.col2: coord_dec_ref
+      axisActions.xAction.column: coord_ra_ref
+      axisActions.yAction.column: coord_dec_ref
+      selectorActions.remove:
+      - catSnSelector
+  plot_astromRefCat_scatter_visit_dRA:
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import AstromDiff
+        config.axisLabels.update({"y": "$RA_{target} - RA_{ref}$ (marcsec)"})
+      connections.plotName: astromRefCatResiduals_scatter_ra_visit
+      connections.catPlot: sourceTable_visit_astrometryRefCat_match
+      axisActions.yAction: AstromDiff
+      axisActions.yAction.col1: coord_ra_target
+      axisActions.yAction.col2: coord_ra_ref
+      selectorActions.remove:
+      - catSnSelector
+  plot_astromRefCat_scatter_visit_dDec:
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+    - python: |
+        from lsst.analysis.drp.calcFunctors import AstromDiff
+        config.axisLabels.update({"y": "$Dec_{target} - Dec_{ref}$ (marcsec)"})
+      connections.plotName: astromRefCatResiduals_scatter_dec_visit
+      connections.catPlot: sourceTable_visit_astrometryRefCat_match
+      axisActions.yAction: AstromDiff
+      axisActions.yAction.col1: coord_dec_target
+      axisActions.yAction.col2: coord_dec_ref
+      selectorActions.remove:
+      - catSnSelector
+  plot_RhoStatistics_visit:
+    class: lsst.analysis.drp.rhoPlotVisit.RhoPlotVisitTask
+  match_astromRefCat_visit:
+    class: lsst.analysis.drp.catalogMatch.CatalogMatchVisitTask
+    config:
+    - python: 'from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector
+
+        '
+      selectorActions.flagSelector: VisitPlotFlagSelector
+      sourceSelectorActions.sourceSelector.band: ''
+  analyzeObjectTableCore:
+    class: lsst.analysis.tools.tasks.ObjectTableTractAnalysisTask
+    config:
+    - python: |
+        from lsst.analysis.tools.analysisPlots import *
+        from lsst.analysis.tools.analysisMetrics import *
+        from lsst.analysis.tools.contexts import *
+      connections.outputName: objectTableCore
+      plots.shapeSizeFractionalDiffScatter: ShapeSizeFractionalDiffScatterPlot
+      metrics.shapeSizeFractionalMetric: ShapeSizeFractionalMetric
+      plots.e1DiffScatter: E1DiffScatterPlot
+      metrics.e1DiffScatterMetric: E1DiffMetric
+      plots.e2DiffScatter: E2DiffScatterPlot
+      metrics.e2DiffScatterMetric: E2DiffMetric
+      metrics.skyFluxStatisticMetric: SkyFluxStatisticMetric
+      metrics.skyFluxStatisticMetric.applyContext: CoaddContext
+  catalogMatchTract:
+    class: lsst.analysis.tools.tasks.catalogMatch.CatalogMatchTask
+    config:
+    - bands:
+      - u
+      - g
+      - r
+      - i
+      - z
+      - y
+  refCatObjectTract:
+    class: lsst.analysis.tools.tasks.refCatObjectAnalysis.RefCatObjectAnalysisTask
+    config:
+    - bands:
+      - u
+      - g
+      - r
+      - i
+      - z
+      - y
+contracts:
+- contract: '''calib_psf_candidate'' not in measure.propagateFlags.source_flags if
+    makeWarp.doApplyFinalizedPsf else True'
+- contract: '''calib_psf_reserved'' not in measure.propagateFlags.source_flags if
+    makeWarp.doApplyFinalizedPsf else True'
+- contract: '''calib_psf_used'' not in measure.propagateFlags.source_flags if makeWarp.doApplyFinalizedPsf
+    else True'
+- contract: consolidateHealSparsePropertyMaps.property_maps == healSparsePropertyMaps.property_maps
+- contract: detectAndMeasureDiaSources.connections.subtractedMeasuredExposure == forcedPhotDiffim.connections.exposure
+- contract: detectAndMeasureDiaSources.connections.subtractedMeasuredExposure == transformDiaSourceCat.connections.diffIm
+- contract: drpAssociation.connections.assocDiaSourceTable == drpDiaCalculation.connections.assocDiaSourceTable
+- contract: drpAssociation.connections.diaObjectTable == drpDiaCalculation.connections.diaObjectTable
+- contract: forcedPhotDiffim.connections.refCat == forcedPhotCcd.connections.refCat
+- contract: getTemplate.connections.template == subtractImages.connections.template
+- contract: selectGoodSeeingVisits.connections.goodVisits == templateGen.connections.selectedVisits
+- contract: subtractImages.connections.difference == detectAndMeasureDiaSources.connections.difference
+- contract: subtractImages.connections.matchedTemplate == detectAndMeasureDiaSources.connections.matchedTemplate
+- contract: templateGen.connections.coaddExposure == getTemplate.connections.coaddExposures
+- contract: transformDiaSourceCat.connections.diaSourceTable == consolidateDiaSourceTable.connections.inputCatalogs
+- contract: transformDiaSourceCat.connections.diaSourceTable == drpAssociation.connections.diaSourceTables
+subsets:
+  analysis_coadd_plots:
+    subset:
+    - plot_ri_gr_cmodel
+    - plot_shapeSizeFractionalDiff_scatter
+    - plot_E1Diff_magDiff_scatter
+    - plot_yFit_PSF
+    - plot_shapeSizeFractionalDiff_magDiff_scatter
+    - plot_CircAp12_sub_PSF_meas_sky_stars
+    - plot_xFit_PSF
+    - plot_shapeSizeFractionalDiff_sky
+    - plot_xFit_CModel
+    - plot_CModel_sub_PSFmag_meas_sky_stars
+    - plot_E1Diff_scatter
+    - plot_CircAp12_sub_PSF_meas_gals_scatter
+    - plot_CircAp12_sub_PSF_meas_stars_scatter
+    - skyPlot_skyObject
+    - plot_CircAp12_sub_PSF_meas_calib_psf_used_sky_all
+    - plot_astromRefCat_sky_tract_dDec
+    - plot_ri_gr_psf
+    - plot_CircAp12_sub_PSF_meas_calib_psf_used_all_scatter
+    - plot_E2Diff_sky
+    - histPlot_skyObject
+    - plot_RhoStatistics
+    - plot_astromRefCat_sky_tract_dRA
+    - plot_E2Diff_scatter
+    - plot_E1Diff_sky
+    - plot_yFit_CModel
+    - plot_astromRefCat_scatter_tract_dDec
+    - plot_CircAp12_sub_PSF_meas_sky_gals
+    - plot_wFit_CModel
+    - match_astromRefCat_objectTable
+    - plot_PSFFluxSN_meas_sky_all
+    - plot_astromRefCat_scatter_tract_dRA
+    - plot_CModel_sub_PSFmag_meas_sky_galaxies
+    - plot_wFit_PSF
+    - plot_E2Diff_magDiff_scatter
+  analysis_visit_plots:
+    subset:
+    - plot_CircAp12_sub_PSF_all_scatter_visit
+    - plot_PSFluxSN_meas_sky_all_visit
+    - plot_e1_sky_visit
+    - plot_RhoStatistics_visit
+    - plot_e1PSF_sky_visit
+    - plot_e1_scatter_visit
+    - plot_shapeSizeDiff_scatter_visit
+    - plot_astromRefCat_scatter_visit_dRA
+    - plot_ShapeDiff_sky_visit
+    - plot_astromRefCat_sky_visit_dDec
+    - plot_CircAp12_sub_PSF_meas_scatter_visit
+    - plot_ellipResids_quiver_visit
+    - plot_e2_sky_visit
+    - plot_CircAp12_sub_PSF_meas_sky_gals_visit
+    - plot_CircAp12_sub_PSF_meas_calib_psf_used_scatter_visit
+    - plot_CircAp25_sub_PSF_gals_scatter_visit
+    - plot_E2Diff_sky_visit
+    - plot_e2PSF_scatter_visit
+    - plot_e2_scatter_visit
+    - plot_CircAp12_sub_PSF_meas_sky_stars_visit
+    - plot_CircAp12_sub_PSF_gals_scatter_visit
+    - plot_e2PSF_sky_visit
+    - plot_shapeSizeFractionalDiff_scatter_visit
+    - plot_shapeSizePSF_scatter_visit
+    - plot_shapeSize_scatter_visit
+    - plot_shapeSize_sky_visit
+    - match_astromRefCat_visit
+    - plot_astromRefCat_scatter_visit_dDec
+    - plot_CircAp12_sub_PSF_meas_calib_psf_used_sky_gals_visit
+    - plot_astromRefCat_sky_visit_dRA
+    - plot_shapeSizePSF_sky_visit
+    - plot_E2Diff_scatter_visit
+    - plot_CircAp25_sub_PSF_all_scatter_visit
+    - plot_E1Diff_sky_visit
+    - plot_CircAp25_sub_PSF_meas_scatter_visit
+    - plot_CircAp12_sub_PSF_meas_calib_psf_used_sky_stars_visit
+    - plot_CircAp12_sub_PSF_calib_psf_used_sky_unknown_visit
+    - plot_skyObject_sky_visit
+    - plot_e1PSF_scatter_visit
+    - plot_E1Diff_scatter_visit
+  coaddition:
+    subset:
+    - makeWarp
+    - assembleCoadd
+    - healSparsePropertyMaps
+    description: 'A set of tasks to run when coadding images.
+
+      '
+  diffimDRP:
+    subset:
+    - consolidateDiaSourceTable
+    - drpDiaCalculation
+    - detectAndMeasureDiaSources
+    - templateGen
+    - forcedPhotCcdOnDiaObjects
+    - getTemplate
+    - transformDiaSourceCat
+    - forcedPhotDiffim
+    - forcedPhotDiffOnDiaObjects
+    - subtractImages
+    - selectGoodSeeingVisits
+    - drpAssociation
+    description: 'Subset for running image differencing branch of the DRP pipeline
+
+      '
+  faro_all:
+    subset:
+    - matchCatalogsPatch
+    - AF3_design
+    - psfPhotRepStar3
+    - skyObjectMean
+    - AM2
+    - AD2_design
+    - matchObjectToTruth
+    - skyObjectStd
+    - PA1
+    - modelPhotRepGal1
+    - AM1
+    - psfPhotRepStar4
+    - TE2
+    - modelPhotRepGal3
+    - PF1_design
+    - TE1
+    - AM3
+    - nsrcMeasVisit
+    - TE3
+    - wPerp
+    - matchCatalogsPatchMultiBand
+    - matchCatalogsTract
+    - AB1
+    - TE4
+    - modelPhotRepStar3
+    - matchCatalogsTractStarsSNR5to80
+    - matchCatalogsTractGxsSNR5to80
+    - AD3_design
+    - modelPhotRepGal2
+    - modelPhotRepStar1
+    - compareObjectToTruth
+    - AF2_design
+    - modelPhotRepStar4
+    - AD1_design
+    - psfPhotRepStar1
+    - matchCatalogsTractMag17to21p5
+    - AF1_design
+    - psfPhotRepStar2
+    - modelPhotRepStar2
+    - modelPhotRepGal4
+    description: |
+      Set of tasks for calculation of metrics via faro.
+      These tasks are a mix of visit- and tract-level.
+
+      Tasks that require single-frame products use Calibrated Source Tables,
+      which are available after consolidateSourceTable (step2).
+      Tasks that require coadd products use Object Tables which are available
+      after consolidateObjectTable (step3).
+  forced:
+    subset:
+    - forcedPhotCcd
+    - forcedPhotCoadd
+    description: 'A set of tasks to run when doing forced measurements.
+
+      '
+  imsim_analysis_coadd_plots:
+    subset:
+    - plot_red_galaxy_rmi_gaap1p0_pull
+    - plot_ri_gr_cmodel
+    - plot_shapeSizeFractionalDiff_scatter
+    - plot_red_galaxy_gmr_gaap0p7_pull
+    - plot_red_galaxy_zmy_gaap1p0_pull
+    - plot_yFit_PSF
+    - plot_shapeSizeFractionalDiff_magDiff_scatter
+    - plot_CircAp12_sub_PSF_meas_sky_stars
+    - plot_red_galaxy_rmi_gaap1p0_residual
+    - plot_red_galaxy_imz_gaap1p0_pull
+    - plot_E1Diff_magDiff_scatter
+    - plot_xFit_PSF
+    - plot_matched_diff_x
+    - plot_shapeSizeFractionalDiff_sky
+    - plot_red_galaxy_zmy_cmodel_pull
+    - plot_red_galaxy_gmr_gaap0p7_residual
+    - match_red_galaxies
+    - plot_red_galaxy_zmy_gaap0p7_residual
+    - plot_red_galaxy_gmr_gaap1p0_residual
+    - plot_CModel_sub_PSFmag_meas_sky_stars
+    - plot_red_galaxy_rmi_cmodel_pull
+    - plot_red_galaxy_rmi_gaap0p7_residual
+    - plot_matched_chi_cModelFlux_scatter
+    - plot_red_galaxy_rmi_gaap0p7_pull
+    - plot_E1Diff_scatter
+    - plot_red_galaxy_gmr_cmodel_pull
+    - plot_CircAp12_sub_PSF_meas_gals_scatter
+    - plot_red_galaxy_imz_gaap1p0_residual
+    - plot_red_galaxy_imz_gaap0p7_residual
+    - plot_CircAp12_sub_PSF_meas_stars_scatter
+    - plot_matched_diff_cModelFlux
+    - plot_red_galaxy_imz_gaap0p7_pull
+    - plot_matched_chi_x
+    - skyPlot_skyObject
+    - plot_CircAp12_sub_PSF_meas_calib_psf_used_sky_all
+    - plot_astromRefCat_sky_tract_dDec
+    - plot_red_galaxy_zmy_cmodel_residual
+    - plot_ri_gr_psf
+    - plot_matched_chi_y
+    - plot_CircAp12_sub_PSF_meas_calib_psf_used_all_scatter
+    - plot_red_galaxy_gmr_gaap1p0_pull
+    - plot_red_galaxy_zmy_gaap0p7_pull
+    - plot_E2Diff_sky
+    - histPlot_skyObject
+    - plot_red_galaxy_zmy_gaap1p0_residual
+    - plot_RhoStatistics
+    - plot_red_galaxy_gmr_cmodel_residual
+    - plot_astromRefCat_sky_tract_dRA
+    - plot_E2Diff_scatter
+    - plot_yFit_CModel
+    - plot_E1Diff_sky
+    - plot_astromRefCat_scatter_tract_dDec
+    - plot_CircAp12_sub_PSF_meas_sky_gals
+    - plot_wFit_CModel
+    - plot_xFit_CModel
+    - plot_matched_diff_y
+    - match_astromRefCat_objectTable
+    - plot_red_galaxy_imz_cmodel_pull
+    - plot_PSFFluxSN_meas_sky_all
+    - plot_red_galaxy_rmi_cmodel_residual
+    - plot_astromRefCat_scatter_tract_dRA
+    - plot_CModel_sub_PSFmag_meas_sky_galaxies
+    - plot_wFit_PSF
+    - plot_E2Diff_magDiff_scatter
+    - plot_red_galaxy_imz_cmodel_residual
+  multiband:
+    subset:
+    - forcedPhotCoadd
+    - measure
+    - mergeMeasurements
+    - deblend
+    - detection
+    - mergeDetections
+    description: 'A set of tasks to run when making measurements on coadds.
+
+      '
+  objectTable:
+    subset:
+    - writeObjectTable
+    - consolidateObjectTable
+    - transformObjectTable
+    description: 'A set of tasks to transform multiband outputs into a parquet object
+      table.
+
+      '
+  processCcd:
+    subset:
+    - characterizeImage
+    - isr
+    - calibrate
+    description: 'Set of tasks to run when doing single frame processing, without
+      any conversions to Parquet/DataFrames or visit-level summaries.
+
+      '
+  sourceTable:
+    subset:
+    - consolidateSourceTable
+    - transformSourceTable
+    - writeSourceTable
+    description: 'Set of tasks to generate parquet Source Tables from output of processCcd
+      subset.
+
+      '
+  step1:
+    subset:
+    - characterizeImage
+    - transformSourceTable
+    - calibrate
+    - writeSourceTable
+    - isr
+    description: |
+      Per-detector tasks that can be run together to start the DRP pipeline.
+
+      These may or may not be run with 'tract' or 'patch' as part of the data
+      ID expression. This specific pipeline contains no tasks that require full
+      visits. Running with 'tract' (and 'patch') constraints will select
+      partial visits that overlap that region.
+
+      In data release processing, operators should stop to address unexpected
+      failures before continuing on to step2.
+  step2:
+    subset:
+    - consolidateSourceTable
+    - finalizeCharacterization
+    - isolatedStarAssociation
+    - makeCcdVisitTable
+    - makeVisitTable
+    - consolidateVisitSummary
+    description: |
+      Tasks that can be run together, but only after the 'step1'.
+
+      This is a mix of visit-level, tract-level, and collection-level tasks
+      that must not be run with any data query constraints other than
+      instrument. For example, running with 'tract' (and 'patch') constraints
+      will select partial visits that overlap that region.
+
+      Visit-level tasks include consolidateSourceTable, consolidateVisitSummary,
+      finalizeCharacterization.
+      Tract-level tasks include: isolatedStarAssociation
+      Full collection-level tasks include: makeCcdVisitTable, makeVisitTable
+  step3:
+    subset:
+    - makeWarp
+    - assembleCoadd
+    description: |
+      Tasks that can be run together, but only after the 'step1' and 'step2'
+      subsets.
+
+      These should be run with explicit 'tract' constraints essentially all the
+      time, because otherwise quanta will be created for jobs with only partial
+      visit coverage.
+
+      It is expected that many forcedPhotCcd quanta will "normally" fail when
+      running this subset, but this isn't a problem right now because there are
+      no tasks downstream of it.  If other tasks regularly fail or we add tasks
+      downstream of forcedPhotCcd, these subsets or the tasks will need
+      additional changes.
+
+      This subset is considered a workaround for missing middleware and task
+      functionality.  It may be removed in the future.
+  step4:
+    subset:
+    - forcedPhotCcd
+    - detectAndMeasureDiaSources
+    - writeForcedSourceTable
+    - getTemplate
+    - subtractImages
+    - forcedPhotDiffim
+    - transformDiaSourceCat
+    description: |
+      Tasks that can be run together, but only after the 'step1', 'step2' and
+      'step3' subsets
+
+      These detector-level tasks should not be run with 'tract' or 'patch' as
+      part of the data ID expression if all reference catalogs or diffIm
+      templates that cover these detector-level quanta are desired.
+  step5:
+    subset:
+    - transformForcedSourceOnDiaObjectTable
+    - transformForcedSourceTable
+    - forcedPhotCcdOnDiaObjects
+    - consolidateForcedSourceTable
+    - writeForcedSourceOnDiaObjectTable
+    - consolidateFullDiaObjectTable
+    - consolidateForcedSourceOnDiaObjectTable
+    - forcedPhotDiffOnDiaObjects
+    - drpAssociation
+    - drpDiaCalculation
+    - consolidateAssocDiaSourceTable
+    description: |
+      Tasks that can be run together, but only after the 'step1', 'step2',
+      'step3', and 'step4' subsets
+
+      This step includes patch-level aggregation Tasks. These should be run
+      with explicit 'tract' constraints in the data query, otherwise quanta
+      will be created for jobs with only partial visit coverage.
+      'consolidateForcedSourceTable' is a tract-level task that aggregates
+      patches and should be rerun if any of the patches fail.
+  step6:
+    subset:
+    - consolidateDiaSourceTable
+    description: |
+      Tasks that can be run together, but only after the 'step1', 'step2',
+      'step3', and 'step4' subsets
+
+      This step includes visit-level aggregation tasks. Running without tract
+      or patch in the data query is recommended, otherwise the outputs of
+      consolidateDiaSourceTable will not contain complete visits.
+
+      This subset is separate from step4 to signal to operators to pause to
+      assess unexpected image differencing failures before these aggregation
+      steps. Otherwise, if run in the same quantum graph, aggregated data
+      products (e.g. diaObjects) would not be created if one or more of the
+      expected inputs is missing.
+  step7:
+    subset:
+    - consolidateHealSparsePropertyMaps
+    description: |
+      Tasks that should be run as the final step that require global inputs,
+      and can be run after the 'step3' subset.
+
+      This step has global aggregation tasks to run over all visits, detectors,
+      tracts, etc.  This step should be run only with the instrument constraint
+      in the data query.
+
