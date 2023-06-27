@@ -1,4 +1,4 @@
-.. list-table:: Image data available for DP0.3.
+.. list-table:: SSObject DP0.3 table.
    :widths: 100 200 390
    :header-rows: 1
 
@@ -172,7 +172,7 @@
      - Flags, bitwise OR tbd.
 
 |
-.. list-table:: Image data available for DP0.3.
+.. list-table:: DiaSource DP0.3 table.
    :widths: 100 200 390
    :header-rows: 1
 
@@ -241,7 +241,7 @@
      - 
 
 |
-.. list-table:: Image data available for DP0.3.
+.. list-table:: SSSource DP0.3 table.
    :widths: 100 200 390
    :header-rows: 1
 
@@ -337,7 +337,7 @@
      - 
 
 |
-.. list-table:: Image data available for DP0.3.
+.. list-table:: MPCORB DP0.3 table.
    :widths: 100 200 390
    :header-rows: 1
 
@@ -427,3 +427,4 @@
      - MPCORB: Date of last observation included in orbit solution
 
 |
+
