@@ -64,3 +64,7 @@ with open('dp03.yaml', 'r') as file:
 for i in range(len(yaml_data['tables'])):
     d = yaml_data['tables'][i]
     print_one_table(d)
+
+for i in range(len(yaml_data['tables'])):
+    d = yaml_data['tables'][i]
+    print(d['name'], ' ', len(d['columns']))
