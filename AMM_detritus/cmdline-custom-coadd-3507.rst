@@ -17,7 +17,7 @@
 **Introduction:** 
 This tutorial shows how to use command line ``pipetask`` invocations to produce custom coadds from simulated single-exposure Rubin/LSST images. It is meant to parallel the corresponding Jupyter Notebook tutorial entitled `Construct a Custom Coadded Image <https://github.com/rubin-dp0/tutorial-notebooks>`_.
 
-The peak memory of this custom coadd processing is between 8 and 9 GB, hence a large container is necessary.
+The peak memory of this custom coadd processing is between 8 and 9 GB, hence a large container is appropriate.
 
 This tutorial uses the Data Preview 0.2 (DP0.2) data set.
 This data set uses a subset of the DESC's Data Challenge 2 (DC2) simulated images, which have been reprocessed by Rubin Observatory using Version 23 of the LSST Science Pipelines.
