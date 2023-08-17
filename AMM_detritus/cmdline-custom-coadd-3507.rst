@@ -194,7 +194,6 @@ You can find out full details about all quanta with a ``pipetask qgraph`` comman
     
 Be aware that this takes approximately 15 minutes to run. 
 No output might appear for most of that time, and it may seem as if nothing is happening.
-If you are familiar with the ``top`` command, you'll notice that running this in a new terminal will also seem to show no activity.
 
 Note a few things about this command:
 
