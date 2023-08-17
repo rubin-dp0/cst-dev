@@ -201,7 +201,7 @@ Note a few things about this command:
 
 * the input data set ``collection`` within DP0.2 is specified via the argument ``-i 2.2i/runs/DP0.2``. It's necessary to know about the input ``collection`` in order for ``pipetask`` and Butler to figure out how many (and which) quanta are expected.
 
-* The same pipeline as always is specified, ``-p $DRP_PIPE_DIR/pipelines/LSSTCam-imSim/DRP-test-med-1.yaml#makeWarp,assembleCoadd \``.
+* The same pipeline URI as always is specified, ``-p $DRP_PIPE_DIR/pipelines/LSSTCam-imSim/DRP-test-med-1.yaml#makeWarp,assembleCoadd \``.
 
 * ``-c`` is used twice, to override the default configuration parameter settings for both ``doApplyFinalizedPsf`` and ``connections.visitSummary``.
 
