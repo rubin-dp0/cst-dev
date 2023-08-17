@@ -74,82 +74,12 @@ In this tutorial, the ``$`` sign is used to indicate a command issued at the RSP
      $ eups list lsst_distrib
      g0b29ad24fb+9b30730ed8       current w_2022_40 setup
 
-Step 2. Create your custom coaddition pipeline
-=============================================
+Step 2. Show your pipeline and its configurations
+=================================================
 
 As you saw in `DP0.2 tutorial notebook 9a <https://github.com/rubin-dp0/tutorial-notebooks>`_, you do not need to rerun the entire DP0.2 data processing in order to obtain custom coadds. You only need to run a subset of the tasks that make up ``step3`` of the DP0.2 processing, where ``step3`` refers to coadd-level processing. Specifically, you want to rerun only the ``makeWarp`` and ``assembleCoadd`` tasks.
 
-The strategy for running these custom coadds via the command line is to start with the "Data Release Production" (DRP) pipeline used for DP0.2 processing and make relatively minor edits to isolate the specific ``makeWarp`` and ``assembleCoadd`` tasks of interest.
-
-2.1. Inspect the DP0.2 YAML pipeline definition
-
-Ensure that you're in the working directory on RSP that you've chosen to be the place from which you will run the custom coadd processing. Let's start by making a local copy of the DRP YAML pipeline definition file for DP0.2. It is conventional to put pipeline definition YAML files in a ``pipelines`` subdirectory, so let's make one in your current working directory:
-
-.. code-block::
-
-    $ mkdir pipelines
-
-Now make yourself a local copy of the full DP0.2 pipeline definition YAML:
-
-.. code-block::
-
-    $ pipetask build -p $DRP_PIPE_DIR/pipelines/LSSTCam-imSim/DRP-test-med-1.yaml \
-    --show pipeline > pipelines/MakeWarpAssembleCoadd.yaml
-
-The above is the first of several ``pipetask`` commands used throughout this tutorial. `pipetask <https://pipelines.lsst.io/modules/lsst.ctrl.mpexec/pipetask.html>`_ commands are provided as part of the LSST Science Pipelines software stack and are used to build, visualize, and run processing pipelines from the terminal. When used as above with the ``--show pipeline`` option, ``pipetask build`` simply assembles and prints out the YAML pipeline definition specified via the ``-p`` argument.
-
-Now let's take a look at your newly created ``pipelines/MakeWarpAssembleCoadd.yaml`` pipeline definition file. There are multiple ways to view an `ASCII <https://en.wikipedia.org/wiki/ASCII>`_ (plain text) file such as ``pipelines/MakeWarpAssembleCoadd.yaml`` from a Linux terminal. Let's use a program called `head <https://en.wikipedia.org/wiki/Head_(Unix)>`_.
-
-
-.. code-block::
-
-    $ head -3151 pipelines/MakeWarpAssembleCoadd.yaml  |tail -19
-      step3:
-        subset:
-            - writeObjectTable
-            - forcedPhotCoadd
-            - templateGen
-            - measure
-            - healSparsePropertyMaps
-            - mergeMeasurements
-            - consolidateObjectTable
-            - mergeDetections
-            - makeWarp
-            - deblend
-            - detection
-            - assembleCoadd
-            - selectGoodSeeingVisits
-            - transformObjectTable
-            description: |
-              Tasks that can be run together, but only after the 'step1' and 'step2'
-              subsets.
-
-The specific arguments to ``head`` and ``tail`` here are used to only show the relevant lines of the full YAML file. Reading through other sections of ``pipelines/MakeWarpAssembleCoadd.yaml`` is left as an optional exercise for the learner.
-
-2.2. Edit the YAML pipeline definition for making custom coadds
-    
-Now let's edit your ``pipelines/MakeWarpAssembleCoadd.yaml`` pipeline definition file. There are multiple ways to edit a text file in a Linux environment, such as `nano <https://www.nano-editor.org/>`_, `emacs <https://www.gnu.org/software/emacs/>`_, and `vim <https://www.vim.org/>`_, all of which are available to you at the RSP terminal.
-
-Using whichever text editor option you prefer, edit the ``step3`` section of ``pipelines/MakeWarpAssembleCoadd.yaml`` so that only the ``makeWarp`` and ``assembleCoadd`` tasks remain. To do this, you should delete exactly 12 lines of YAML from within the ``step3`` section, specifically the lines containing: ``- detection``, ``- mergeDetections``, ``- deblend``, ``- measure``, ``- mergeMeasurements``, ``- forcedPhotCoadd``, ``- transformObjectTable``, ``- writeObjectTable``, ``- consolidateObjectTable``, ``- healSparsePropertyMaps``, ``- selectGoodSeeingVisits``, and ``- templateGen``. Now the `step3` YAML section shown above in Section 2.1 should look like this:
-
-.. code-block::
-
-      step3:
-        subset:
-          - makeWarp
-          - assembleCoadd
-          description: |
-            Tasks that can be run together, but only after the 'step1' and 'step2'
-            subsets.
-
-Make sure to save your changes when you exit the text editor! Also make sure that you did not change any of the indentation in the ``pipelines/MakeWarpAssembleCoadd.yaml`` file, for the lines that remain. Note that the ordering of the ``- makeWarp`` and ``- assembleCoadd`` lines relative to each other `does not matter <https://pipelines.lsst.io/modules/lsst.pipe.base/creating-a-pipeline.html#a-basic-pipeline>`_.
-
-Step 3. Show your pipeline and its configurations
-=================================================
-
 3.1 Choose an output collection name/location
-
-.. probably want to change where this appears relative to other items, figure out later
 
 Some of the ``pipetask`` commands later in this tutorial require you to specify an output collection where your new coadds will eventually be written to. As described in the notebook version of `tutorial 9a <https://github.com/rubin-dp0/tutorial-notebooks>`_, you want to name your output collection as something like ``u/<Your User Name>/<Collection Identifier>``. As a concrete example, throughout the rest of this tutorial ``u/$USER/custom_coadd_window1_cl00`` is used as the collection name (``$USER`` is a Linux environment variable that stores your RSP user name).
 
@@ -234,7 +164,7 @@ Notice that the printed configuration parameter value is indeed ``False`` i.e., 
 
     -c makeWarp:connections.visitSummary="visitSummary" \
     
-Step 4. Explore and visualize the ``QuantumGraph``
+Step 3. Explore and visualize the ``QuantumGraph``
 ==================================================
 
 Before actually deploying the custom coaddition, let's take some time to understand the ``QuantumGraph`` of the processing to be run. The ``QuantumGraph`` is `a tool <https://pipelines.lsst.io/py-api/lsst.pipe.base.QuantumGraph.html#lsst.pipe.base.QuantumGraph>`_ used by the LSST Science Pipelines to break a large processing into relatively "bite-sized" quanta and arrange these quanta into a sequence such that all inputs needed by a given quantum are available for the execution of that quantum. In the present case, you will not be doing an especially large processing, but for production deployments it makes sense to inspect and validate the ``QuantumGraph`` before proceeding straight to full-scale processing launch.
@@ -302,7 +232,7 @@ This command executes very fast (roughly 5 seconds), again because it is not per
 
 Light gray rectangles with rounded corners represent data, whereas darker gray rectangles with sharp corners represent pipeline Tasks. The arrows connecting the data and Tasks illustrate the data processing flow. The data processing starts at the top, with the ``calexp`` calibrated single-exposure images (also known as Processed Visit Images; PVIs). The ``makeWarp`` Task is applied to generate reprojected "warp" images from the various input ``calexp`` images, and finally the ``assembleCoadd`` Task combines the warps into ``deepCoadd`` coadded products (light gray boxes along the bottom row). 
 
-Step 5. Deploy your custom coadd processing
+Step 4. Deploy your custom coadd processing
 ===========================================
 
 As you might guess, the custom coadd processing is run via the ``pipetask run`` command. Because this processing takes longer than prior steps, it's worth adding a little bit of "infrastructure" around your ``pipetask run`` command to perform logging and timing. First, let's start by making a directory into which you'll send the log file of the coaddition processing:
