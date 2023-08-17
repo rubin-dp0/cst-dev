@@ -90,16 +90,16 @@ Let's not jump straight into running the pipeline, but rather start by verifying
 .. code-block::
 
     $ pipetask build \
-    -p pipelines/MakeWarpAssembleCoadd.yaml#step3 \
+    -p $DRP_PIPE_DIR/pipelines/LSSTCam-imSim/DRP-test-med-1.yaml#makeWarp,assembleCoadd \
     --show pipeline
     
 This is all one single terminal (shell) command, but spread out over three input lines using ``\`` for line continuation. It would be entirely equivalent to run:
 
 .. code-block::
 
-    $ pipetask build -p pipelines/MakeWarpAssembleCoadd.yaml#step3 --show pipeline
+    $ pipetask build -p $DRP_PIPE_DIR/pipelines/LSSTCam-imSim/DRP-test-med-1.yaml#makeWarp,assembleCoadd --show pipeline
     
-The ``-p`` parameter of ``pipetask`` is short for ``--pipeline`` and it is critical that this parameter be specified as the new ``pipelines/MakeWarpAssembleCoadd.yaml`` file made in section 2.2. It is also critical that the ``-p`` argument contain the string ``#step3`` appended at the end of the config file name. This is because you want to only run the coaddition step to make custom coadds. Run the above command. The :doc:`full output </tutorials-examples/pipetask-build-printouts>` is shown on a separate page for brevity.
+The ``-p`` parameter of ``pipetask`` is short for ``--pipeline`` and it is critical that this parameter be specified as shown above. The :doc:`full output </tutorials-examples/pipetask-build-printouts>` is shown on a separate page for brevity.
 
 ``pipetask --help`` provides documentation about ``pipetask``, if you are (optionally) interested in learning more about ``pipetask`` and its command line options.
 
@@ -111,7 +111,7 @@ As mentioned in `DP0.2 tutorial notebook 9a <https://github.com/rubin-dp0/tutori
 
     $ pipetask run \
     -b dp02 \
-    -p pipelines/MakeWarpAssembleCoadd.yaml#step3 \
+    -p $DRP_PIPE_DIR/pipelines/LSSTCam-imSim/DRP-test-med-1.yaml#makeWarp,assembleCoadd \
     --show config=makeWarp::doApplyFinalizedPsf
     
 Notice that the ``-p`` parameter passed to ``pipetask`` has remained the same. But in order for ``pipetask run`` to operate, it also needs to know what Butler repository it's dealing with. That's why the ``-b dp02`` argument has been added. ``dp02`` is an alias that points to the `S3 <https://en.wikipedia.org/wiki/Amazon_S3>`_ location of the DP0.2 Butler repository.
@@ -124,7 +124,7 @@ Now let's look at what happens when you run the above ``pipetask command``:
 
     $ pipetask run \
     > -b dp02 \
-    > -p pipelines/MakeWarpAssembleCoadd.yaml#step3 \
+    > -p $DRP_PIPE_DIR/pipelines/LSSTCam-imSim/DRP-test-med-1.yaml#makeWarp,assembleCoadd \
     > --show config=makeWarp::doApplyFinalizedPsf
     Matching "doApplyFinalizedPsf" without regard to case (append :NOIGNORECASE to prevent this)
     ### Configuration for task `makeWarp'
@@ -138,7 +138,7 @@ Ignore the lines about "No quantum graph" and "NOIGNORECASE" -- for the present 
 
     $ pipetask run \
     -b dp02 \
-    -p pipelines/MakeWarpAssembleCoadd.yaml#step3 \
+    -p $DRP_PIPE_DIR/pipelines/LSSTCam-imSim/DRP-test-med-1.yaml#makeWarp,assembleCoadd \
     -c makeWarp:doApplyFinalizedPsf=False \
     --show config=makeWarp::doApplyFinalizedPsf
     
@@ -148,7 +148,7 @@ The penultimate line (``-c makeWarp:doApplyFinalizedPsf=False \``) is newly adde
 
     $ pipetask run \
     > -b dp02 \
-    > -p pipelines/MakeWarpAssembleCoadd.yaml#step3 \
+    > -p $DRP_PIPE_DIR/pipelines/LSSTCam-imSim/DRP-test-med-1.yaml#makeWarp,assembleCoadd \
     > -c makeWarp:doApplyFinalizedPsf=False \
     > --show config=makeWarp::doApplyFinalizedPsf
     Matching "doApplyFinalizedPsf" without regard to case (append :NOIGNORECASE to prevent this)
@@ -186,7 +186,7 @@ You can find out full details about all quanta with a ``pipetask qgraph`` comman
     $ pipetask qgraph \
     -b dp02 \
     -i 2.2i/runs/DP0.2 \
-    -p pipelines/MakeWarpAssembleCoadd.yaml#step3 \
+    -p $DRP_PIPE_DIR/pipelines/LSSTCam-imSim/DRP-test-med-1.yaml#makeWarp,assembleCoadd \
     -c makeWarp:doApplyFinalizedPsf=False \
     -c makeWarp:connections.visitSummary="visitSummary" \
     -d "tract = 4431 AND patch = 17 AND visit in (919515,924057,924085,924086,929477,930353) AND skymap = 'DC2'" \
@@ -202,7 +202,7 @@ Note a few things about this command:
 
 * the input data set ``collection`` within DP0.2 is specified via the argument ``-i 2.2i/runs/DP0.2``. It's necessary to know about the input ``collection`` in order for ``pipetask`` and Butler to figure out how many (and which) quanta are expected.
 
-* The same custom pipeline as always is specified, ``-p pipelines/MakeWarpAssembleCoadd.yaml#step3 \``.
+* The same pipeline as always is specified, ``-p $DRP_PIPE_DIR/pipelines/LSSTCam-imSim/DRP-test-med-1.yaml#makeWarp,assembleCoadd \``.
 
 * ``-c`` is used twice, to override the default configuration parameter settings for both ``doApplyFinalizedPsf`` and ``connections.visitSummary``.
 
@@ -220,7 +220,7 @@ In addition to generating and printing out the ``QuantumGraph`` you can also vis
 .. code-block::
 
     $ pipetask build \
-    -p pipelines/MakeWarpAssembleCoadd.yaml#step3 \
+    -p $DRP_PIPE_DIR/pipelines/LSSTCam-imSim/DRP-test-med-1.yaml#makeWarp,assembleCoadd \
     --pipeline-dot pipeline.dot; \
     dot pipeline.dot -Tpdf > makeWarpAssembleCoadd.pdf
     
@@ -252,7 +252,7 @@ Now you have a directory called ``logs`` into which you can save the pipeline ou
     -b dp02 \
     -i 2.2i/runs/DP0.2 \
     -o u/$USER/custom_coadd_window1_cl00 \
-    -p pipelines/MakeWarpAssembleCoadd.yaml#step3 \
+    -p $DRP_PIPE_DIR/pipelines/LSSTCam-imSim/DRP-test-med-1.yaml#makeWarp,assembleCoadd \
     -c makeWarp:doApplyFinalizedPsf=False \
     -c makeWarp:connections.visitSummary="visitSummary" \
     -d "tract = 4431 AND patch = 17 AND visit in (919515,924057,924085,924086,929477,930353) AND skymap = 'DC2'"; \
