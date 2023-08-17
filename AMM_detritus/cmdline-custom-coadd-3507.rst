@@ -85,7 +85,7 @@ Some of the ``pipetask`` commands later in this tutorial require you to specify 
 
 2.2 Build the pipeline
 
-Let's not jump straight into running the pipeline, but rather start by verifying that the pipeline will first ``build``. To ``build`` a pipeline, you use a command starting with ``pipetask build`` and specify the ``-p`` argument telling ``pipetask`` which specific YAML pipeline definition file you want it to build. If there are syntax or other errors in the YAML file's pipeline definition, then ``pipetask build`` will fail with an error about the problem. If ``pipetask build`` succeeds, it will run without generating errors and print a YAML version of the pipeline to `standard output <https://en.wikipedia.org/wiki/Standard_streams#Standard_output_(stdout)>`_. Here is the exact syntax:
+Let's not jump straight into running the pipeline, but rather start by verifying that the pipeline will first ``build``. To ``build`` a pipeline, you use a command starting with ``pipetask build`` and specify the ``-p`` argument telling ``pipetask`` which specific YAML pipeline definition `URI <https://en.wikipedia.org/wiki/Uniform_Resource_Identifier>`_ you want it to build. If there are syntax or other errors in the pipeline definition, then ``pipetask build`` will fail with an error about the problem. If ``pipetask build`` succeeds, it will run without generating errors and print a YAML version of the pipeline to `standard output <https://en.wikipedia.org/wiki/Standard_streams#Standard_output_(stdout)>`_. Here is the exact syntax:
 
 .. code-block::
 
