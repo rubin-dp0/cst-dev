@@ -1,0 +1,28 @@
+Mon Sep 18 05:06:25 UTC 2023
+WARNING 2023-09-18T05:06:35.753+00:00 py.warnings ()(warnings.py:109) - /opt/lsst/software/stack/stack/miniconda3-py38_4.9.2-4.1.0/Linux64/pipe_tasks/g369a80f31c+b9be13ffc2/python/lsst/pipe/tasks/multiBand.py:261: UserWarning: MeasureMergedCoaddSourcesConnections.defaultTemplates is deprecated and no longer used. Use MeasureMergedCoaddSourcesConfig.inputCatalog.
+  warnings.warn("MeasureMergedCoaddSourcesConnections.defaultTemplates is deprecated and no longer used. "
+
+INFO 2023-09-18T05:06:38.801+00:00 lsst.ctrl.mpexec.cmdLineFwk ()(cmdLineFwk.py:581) - QuantumGraph contains 2 quanta for 2 tasks, graph ID: '1695013598.8000996-2191'
+INFO 2023-09-18T05:07:03.859+00:00 lsst.detection.scaleVariance (detection:{band: 'i', skymap: 'DC2', tract: 4431, patch: 17})(scaleVariance.py:130) - Renormalizing variance by 1.004598
+INFO 2023-09-18T05:07:03.895+00:00 lsst.detection.detection (detection:{band: 'i', skymap: 'DC2', tract: 4431, patch: 17})(detection.py:925) - Applying temporary wide background subtraction
+INFO 2023-09-18T05:07:07.156+00:00 lsst.detection.detection (detection:{band: 'i', skymap: 'DC2', tract: 4431, patch: 17})(detection.py:598) - Detected 27272 positive peaks in 13944 footprints to 2.5 sigma
+INFO 2023-09-18T05:07:12.308+00:00 lsst.detection.detection.skyObjects (detection:{band: 'i', skymap: 'DC2', tract: 4431, patch: 17})(skyObjects.py:125) - Added 1000 of 1000 requested sky sources (100%)
+INFO 2023-09-18T05:07:12.339+00:00 lsst.detection.detection.skyMeasurement (detection:{band: 'i', skymap: 'DC2', tract: 4431, patch: 17})(forcedMeasurement.py:342) - Performing forced measurement on 1000 sources
+INFO 2023-09-18T05:07:22.067+00:00 lsst.detection.detection (detection:{band: 'i', skymap: 'DC2', tract: 4431, patch: 17})(dynamicDetection.py:220) - Modifying configured detection threshold by factor 0.796640 to 3.983202
+INFO 2023-09-18T05:07:23.445+00:00 lsst.detection.detection (detection:{band: 'i', skymap: 'DC2', tract: 4431, patch: 17})(detection.py:598) - Detected 7764 positive peaks in 5704 footprints to 3.9832 sigma
+INFO 2023-09-18T05:07:25.107+00:00 lsst.detection.detection (detection:{band: 'i', skymap: 'DC2', tract: 4431, patch: 17})(detection.py:598) - Detected 11905 positive peaks in 6108 footprints to 3.9832 sigma
+INFO 2023-09-18T05:07:27.031+00:00 lsst.detection.detection.skyObjects (detection:{band: 'i', skymap: 'DC2', tract: 4431, patch: 17})(skyObjects.py:125) - Added 1000 of 1000 requested sky sources (100%)
+INFO 2023-09-18T05:07:27.062+00:00 lsst.detection.detection.skyMeasurement (detection:{band: 'i', skymap: 'DC2', tract: 4431, patch: 17})(forcedMeasurement.py:342) - Performing forced measurement on 1000 sources
+INFO 2023-09-18T05:07:36.785+00:00 lsst.detection.detection (detection:{band: 'i', skymap: 'DC2', tract: 4431, patch: 17})(dynamicDetection.py:280) - Tweaking background by -0.009388 to match sky photometry
+INFO 2023-09-18T05:07:42.226+00:00 lsst.ctrl.mpexec.singleQuantumExecutor (detection:{band: 'i', skymap: 'DC2', tract: 4431, patch: 17})(singleQuantumExecutor.py:232) - Execution of task 'detection' on quantum {band: 'i', skymap: 'DC2', tract: 4431, patch: 17} took 41.804 seconds
+INFO 2023-09-18T05:07:42.238+00:00 lsst.ctrl.mpexec.singleQuantumExecutor ()(singleQuantumExecutor.py:654) - Log records could not be stored in this butler because the datastore can not ingest files, empty record list is stored instead.
+INFO 2023-09-18T05:07:42.770+00:00 lsst.ctrl.mpexec.mpGraphExecutor ()(mpGraphExecutor.py:518) - Executed 1 quanta successfully, 0 failed and 1 remain out of total 2 quanta.
+INFO 2023-09-18T05:07:45.627+00:00 lsst.deblend.multibandDeblend (deblend:{skymap: 'DC2', tract: 4431, patch: 17})(scarletDeblendTask.py:973) - Deblending 10401 sources in 1 exposure bands
+WARNING 2023-09-18T05:07:52.508+00:00 py.warnings (deblend:{skymap: 'DC2', tract: 4431, patch: 17})(warnings.py:109) - /opt/lsst/software/stack/stack/miniconda3-py38_4.9.2-4.1.0/Linux64/scarlet/gd32b658ba2+4083830bf8/lib/python/scarlet/lite/models.py:119: RuntimeWarning: invalid value encountered in true_divide
+  if np.any(edge_flux/edge_mask > self.bg_thresh*self.bg_rms[:, None, None]):
+
+INFO 2023-09-18T05:16:03.838+00:00 lsst.deblend.multibandDeblend (deblend:{skymap: 'DC2', tract: 4431, patch: 17})(scarletDeblendTask.py:1135) - Deblender results: of 10401 parent sources, 10297 were deblended, creating 25947 children, for a total of 36348 sources
+INFO 2023-09-18T05:16:10.047+00:00 lsst.ctrl.mpexec.singleQuantumExecutor (deblend:{skymap: 'DC2', tract: 4431, patch: 17})(singleQuantumExecutor.py:232) - Execution of task 'deblend' on quantum {skymap: 'DC2', tract: 4431, patch: 17} took 507.276 seconds
+INFO 2023-09-18T05:16:10.070+00:00 lsst.ctrl.mpexec.singleQuantumExecutor ()(singleQuantumExecutor.py:654) - Log records could not be stored in this butler because the datastore can not ingest files, empty record list is stored instead.
+INFO 2023-09-18T05:16:10.628+00:00 lsst.ctrl.mpexec.mpGraphExecutor ()(mpGraphExecutor.py:518) - Executed 2 quanta successfully, 0 failed and 0 remain out of total 2 quanta.
+Mon Sep 18 05:16:11 UTC 2023
