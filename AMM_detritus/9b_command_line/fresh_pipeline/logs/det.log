@@ -1,0 +1,23 @@
+Thu Oct  5 11:09:52 UTC 2023
+ERROR 2023-10-05T11:09:58.871+00:00 lsst.daf.butler.cli.utils ()(utils.py:1093) - Caught an exception, details are in traceback:
+Traceback (most recent call last):
+  File "/opt/lsst/software/stack/stack/miniconda3-py38_4.9.2-4.1.0/Linux64/ctrl_mpexec/g993939a6a1+f01622d10f/python/lsst/ctrl/mpexec/cli/cmd/commands.py", line 159, in run
+    qgraph = script.qgraph(pipelineObj=pipeline, **kwargs, show=show)
+  File "/opt/lsst/software/stack/stack/miniconda3-py38_4.9.2-4.1.0/Linux64/ctrl_mpexec/g993939a6a1+f01622d10f/python/lsst/ctrl/mpexec/cli/script/qgraph.py", line 196, in qgraph
+    qgraph = f.makeGraph(pipelineObj, args)
+  File "/opt/lsst/software/stack/stack/miniconda3-py38_4.9.2-4.1.0/Linux64/ctrl_mpexec/g993939a6a1+f01622d10f/python/lsst/ctrl/mpexec/cmdLineFwk.py", line 563, in makeGraph
+    qgraph = graphBuilder.makeGraph(
+  File "/opt/lsst/software/stack/stack/miniconda3-py38_4.9.2-4.1.0/Linux64/pipe_base/gbbd6c36fd7+a713711289/python/lsst/pipe/base/graphBuilder.py", line 1275, in makeGraph
+    scaffolding = _PipelineScaffolding(pipeline, registry=self.registry)
+  File "/opt/lsst/software/stack/stack/miniconda3-py38_4.9.2-4.1.0/Linux64/pipe_base/gbbd6c36fd7+a713711289/python/lsst/pipe/base/graphBuilder.py", line 567, in __init__
+    datasetTypes = PipelineDatasetTypes.fromPipeline(pipeline, registry=registry)
+  File "/opt/lsst/software/stack/stack/miniconda3-py38_4.9.2-4.1.0/Linux64/pipe_base/gbbd6c36fd7+a713711289/python/lsst/pipe/base/pipeline.py", line 1143, in fromPipeline
+    pipeline = list(pipeline)
+  File "/opt/lsst/software/stack/stack/miniconda3-py38_4.9.2-4.1.0/Linux64/pipe_base/gbbd6c36fd7+a713711289/python/lsst/pipe/base/pipeline.py", line 665, in toExpandedPipeline
+    taskDefs.append(self._buildTaskDef(label))
+  File "/opt/lsst/software/stack/stack/miniconda3-py38_4.9.2-4.1.0/Linux64/pipe_base/gbbd6c36fd7+a713711289/python/lsst/pipe/base/pipeline.py", line 709, in _buildTaskDef
+    return TaskDef(taskName=taskName, config=config, taskClass=taskClass, label=label)
+  File "/opt/lsst/software/stack/stack/miniconda3-py38_4.9.2-4.1.0/Linux64/pipe_base/gbbd6c36fd7+a713711289/python/lsst/pipe/base/pipeline.py", line 170, in __init__
+    self.connections = config.connections.ConnectionsClass(config=config)
+AttributeError: 'SourceDetectionConfig' object has no attribute 'connections'
+Thu Oct  5 11:09:59 UTC 2023
