@@ -1,0 +1,7 @@
+description: pipeline for command line version of DP0.2 tutorial notebook 9b
+instrument: lsst.obs.lsst.LsstCamImSim
+tasks:
+  characterizeImage: lsst.pipe.tasks.characterizeImage.CharacterizeImageTask
+  detection: lsst.meas.algorithms.detection.SourceDetectionTask
+  deblend: lsst.meas.deblender.SourceDeblendTask
+  measure: lsst.meas.base.SingleFrameMeasurementTask
