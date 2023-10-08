@@ -1,0 +1,6 @@
+description: pipeline for command line version of DP0.2 tutorial notebook 9b
+instrument: lsst.obs.lsst.LsstCamImSim
+tasks:
+  detection: lsst.pipe.tasks.multiBand.DetectCoaddSourcesTask
+  deblend_single: lsst.pipe.tasks.deblendCoaddSourcesPipeline.DeblendCoaddSourcesSingleTask
+  measure: lsst.meas.base.SingleFrameMeasurementTask
