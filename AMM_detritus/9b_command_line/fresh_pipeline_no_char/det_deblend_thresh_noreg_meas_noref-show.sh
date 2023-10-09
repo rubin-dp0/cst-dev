@@ -1,5 +1,3 @@
-LOGFILE=$LOGDIR/det_deblend_thresh_noreg_meas.log; \
-date | tee $LOGFILE; \
 pipetask run \
 -b dp02 \
 -i u/$USER/custom_coadd_window1_test1,2.2i/runs/DP0.2 \
