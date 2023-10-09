@@ -15,6 +15,8 @@ pipetask --long-log --log-file $LOGFILE run \
 -c measure:doWriteMatchesDenormalized=False \
 -c measure:doPropagateFlags=False \
 -c measure:inputCatalog="deblendedFlux" \
+-c measure:connections.inputCatalog="deepCoadd_deblendedFlux" \
+-c measure:connections.scarletCatalog="deepCoadd_deblendedFlux" \
 -c measure:connections.refCat="cal_ref_cat_2_2" \
 -p nb9b_det_deblend_meas.yaml#detection,deblend_single,measure \
 -d "tract = 4431 AND patch = 17 AND band = 'i' AND skymap = 'DC2'"; \
