@@ -1,0 +1,30 @@
+Tue Oct 10 09:40:09 UTC 2023
+WARNING 2023-10-10T09:40:18.472+00:00 py.warnings ()(warnings.py:109) - /opt/lsst/software/stack/stack/miniconda3-py38_4.9.2-4.1.0/Linux64/pipe_tasks/g369a80f31c+b9be13ffc2/python/lsst/pipe/tasks/multiBand.py:261: UserWarning: MeasureMergedCoaddSourcesConnections.defaultTemplates is deprecated and no longer used. Use MeasureMergedCoaddSourcesConfig.inputCatalog.
+  warnings.warn("MeasureMergedCoaddSourcesConnections.defaultTemplates is deprecated and no longer used. "
+
+WARNING 2023-10-10T09:40:18.495+00:00 py.warnings ()(warnings.py:109) - /opt/lsst/software/stack/stack/miniconda3-py38_4.9.2-4.1.0/Linux64/pex_config/g71c1dbb2b5+9a7299d786/python/lsst/pex/config/configurableField.py:79: FutureWarning: Call to deprecated class LoadIndexedReferenceObjectsConfig. (This config is no longer used; it will be removed after v25. Please use LoadReferenceObjectsConfig instead.) -- Deprecated since version v25.0.
+  value = self._ConfigClass(__name=name, __at=at, __label=label, **storage)
+
+WARNING 2023-10-10T09:40:18.496+00:00 py.warnings ()(warnings.py:109) - /opt/lsst/software/stack/stack/miniconda3-py38_4.9.2-4.1.0/Linux64/pex_config/g71c1dbb2b5+9a7299d786/python/lsst/pex/config/configurableField.py:359: FutureWarning: Call to deprecated class LoadIndexedReferenceObjectsConfig. (This config is no longer used; it will be removed after v25. Please use LoadReferenceObjectsConfig instead.) -- Deprecated since version v25.0.
+  value = oldValue.ConfigClass()
+
+ERROR 2023-10-10T09:40:18.894+00:00 lsst.daf.butler.cli.utils ()(utils.py:1093) - Caught an exception, details are in traceback:
+Traceback (most recent call last):
+  File "/opt/lsst/software/stack/stack/miniconda3-py38_4.9.2-4.1.0/Linux64/ctrl_mpexec/g993939a6a1+f01622d10f/python/lsst/ctrl/mpexec/cli/cmd/commands.py", line 159, in run
+    qgraph = script.qgraph(pipelineObj=pipeline, **kwargs, show=show)
+  File "/opt/lsst/software/stack/stack/miniconda3-py38_4.9.2-4.1.0/Linux64/ctrl_mpexec/g993939a6a1+f01622d10f/python/lsst/ctrl/mpexec/cli/script/qgraph.py", line 196, in qgraph
+    qgraph = f.makeGraph(pipelineObj, args)
+  File "/opt/lsst/software/stack/stack/miniconda3-py38_4.9.2-4.1.0/Linux64/ctrl_mpexec/g993939a6a1+f01622d10f/python/lsst/ctrl/mpexec/cmdLineFwk.py", line 563, in makeGraph
+    qgraph = graphBuilder.makeGraph(
+  File "/opt/lsst/software/stack/stack/miniconda3-py38_4.9.2-4.1.0/Linux64/pipe_base/gbbd6c36fd7+a713711289/python/lsst/pipe/base/graphBuilder.py", line 1275, in makeGraph
+    scaffolding = _PipelineScaffolding(pipeline, registry=self.registry)
+  File "/opt/lsst/software/stack/stack/miniconda3-py38_4.9.2-4.1.0/Linux64/pipe_base/gbbd6c36fd7+a713711289/python/lsst/pipe/base/graphBuilder.py", line 567, in __init__
+    datasetTypes = PipelineDatasetTypes.fromPipeline(pipeline, registry=registry)
+  File "/opt/lsst/software/stack/stack/miniconda3-py38_4.9.2-4.1.0/Linux64/pipe_base/gbbd6c36fd7+a713711289/python/lsst/pipe/base/pipeline.py", line 1152, in fromPipeline
+    thisTask = TaskDatasetTypes.fromTaskDef(
+  File "/opt/lsst/software/stack/stack/miniconda3-py38_4.9.2-4.1.0/Linux64/pipe_base/gbbd6c36fd7+a713711289/python/lsst/pipe/base/pipeline.py", line 1014, in fromTaskDef
+    inputs=makeDatasetTypesSet("inputs", is_input=True),
+  File "/opt/lsst/software/stack/stack/miniconda3-py38_4.9.2-4.1.0/Linux64/pipe_base/gbbd6c36fd7+a713711289/python/lsst/pipe/base/pipeline.py", line 964, in makeDatasetTypesSet
+    raise ValueError(
+ValueError: Supplied dataset type (DatasetType('deepCoadd_deblendedFlux', {skymap, tract, patch}, SourceCatalog)) inconsistent with registry definition (DatasetType('deepCoadd_deblendedFlux', {band, skymap, tract, patch}, SourceCatalog)) for measure.
+Tue Oct 10 09:40:19 UTC 2023
