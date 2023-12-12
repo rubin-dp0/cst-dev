@@ -10,15 +10,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	apt-get clean && \
 	rm -rf /var/lib/apt/lists/*
 
-# Set the working directory
+# Set the working directory.
 ENV APP_HOME /app
 WORKDIR $APP_HOME
 
 # Copy local code to the container image.
 COPY . ./
 
-# Install the requirements
-RUN pip install -r requirements.txt
+# Upgrade pip and install the requirements.
+RUN pip install --root-user-action=ignore --upgrade pip -r requirements.txt
 
-# Run the script to connect to the RSP and create and save an image cutout
+# Run the script to remotely query the Rubin Science Platform.
 CMD ["python3","hello-rubin.py"]
