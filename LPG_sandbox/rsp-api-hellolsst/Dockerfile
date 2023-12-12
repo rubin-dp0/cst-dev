@@ -1,8 +1,14 @@
 # Use the official lightweight Python image.
-FROM python:3.12
+FROM python:3.11-slim
 
 LABEL MAINTAINER="Leanne Guy <leanne@lsst.org>"
 
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+	build-essential \
+	&& \
+	apt-get clean && \
+	rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
 ENV APP_HOME /app
@@ -10,10 +16,6 @@ WORKDIR $APP_HOME
 
 # Copy local code to the container image.
 COPY . ./
-
-
-# Upgrade pip
-RUN python -m pip install --root-user-action=ignore --upgrade --quiet --no-cache-dir pip setuptools wheel 
 
 # Install the requirements
 RUN pip install -r requirements.txt
